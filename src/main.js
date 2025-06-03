@@ -18,7 +18,7 @@ let config = {
     },
     width: 1440,
     height: 900,
-    scene: [Load]
+    scene: [Load, Level]
 }
 
 var score = 0;
