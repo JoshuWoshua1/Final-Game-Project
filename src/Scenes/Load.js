@@ -10,6 +10,7 @@ class Load extends Phaser.Scene {
         // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********
         this.load.atlas("platformer_characters", "/characters/tilemap-characters-packed.png", "/characters/tilemap-characters-packed.json");
         // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********
+        this.load.atlas("cats", "/characters/Cat_Sprites.png", "/characters/Cat_Sprites.json");
 
         // Load tilemap information
         this.load.image("tilemap_tiles", "/tilemaps/tilemap_packed.png");  // Packed basic tilemap
@@ -27,31 +28,30 @@ class Load extends Phaser.Scene {
         // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********
         this.anims.create({
             key: 'walk',
-            frames: this.anims.generateFrameNames('platformer_characters', {
-                prefix: "tile_",
-                start: 0,
-                end: 1,
-                suffix: ".png",
-                zeroPad: 4
-            }),
+            frames: [
+                { key: 'cats', frame: 'Cat_3.png' },
+                { key: 'cats', frame: 'Cat_1.png' }
+            ],
             frameRate: 15,
             repeat: -1
         });
 
         this.anims.create({
             key: 'idle',
-            defaultTextureKey: "platformer_characters",
+            defaultTextureKey: "cats",
             frames: [
-                { frame: "tile_0000.png" }
+                { frame: "Cat_1.png" },
+                { frame: "Cat_2.png"}
             ],
+            frameRate: 5,
             repeat: -1
         });
 
         this.anims.create({
             key: 'jump',
-            defaultTextureKey: "platformer_characters",
+            defaultTextureKey: "cats",
             frames: [
-                { frame: "tile_0001.png" }
+                { frame: "Cat_3.png" }
             ],
         });
         // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********

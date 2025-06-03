@@ -7,12 +7,10 @@ class Level extends Phaser.Scene {
         // basic movement variables
         this.ACCELERATION = 2000;
         this.DRAG = 4000;  // if accel < drag, instant turning. if accel > drag, sliding
-        this.MAX_SPEED = 200;  //maximum speed while moving
-        this.MAX_FALL_SPEED = 800; //maximum speed while falling
+        this.MAX_SPEED = 200;  // maximum speed while moving
+        this.MAX_FALL_SPEED = 800; // maximum speed while falling
 
-        this.physics.world.gravity.y = 1500;
-
-        this.PARTICLE_VELOCITY = 50;
+        this.physics.world.gravity.y = 1500; // gravity setup
 
         this.ZOOM = 2.0;
 
@@ -27,7 +25,7 @@ class Level extends Phaser.Scene {
 
         /* Dash variables if we need them
         this.DASH_SPEED = -1000;
-        this.DASH_DURATION = 100; 
+        this.DASH_DURATION = 100;
         this.DASH_COOLDOWN = 500;
         this.isDashing = false;
         this.dashTimer = 0;
@@ -118,7 +116,7 @@ class Level extends Phaser.Scene {
     update() {
         if(this.aKey.isDown) {
             my.sprite.player.setAccelerationX(-this.ACCELERATION);
-            my.sprite.player.resetFlip();
+            my.sprite.player.setFlip(true, false);
             my.sprite.player.anims.play('walk', true);
 
             // VFX implementation here
@@ -127,7 +125,7 @@ class Level extends Phaser.Scene {
 
         } else if(this.dKey.isDown) {
             my.sprite.player.setAccelerationX(this.ACCELERATION);
-            my.sprite.player.setFlip(true, false);
+            my.sprite.player.resetFlip();
             my.sprite.player.anims.play('walk', true);
 
             // VFX implementation here
@@ -137,7 +135,7 @@ class Level extends Phaser.Scene {
         } else { //when no button is pressed set acceleration to 0
             my.sprite.player.setAccelerationX(0);
             my.sprite.player.setDragX(this.DRAG);
-            my.sprite.player.anims.play('idle');
+            my.sprite.player.anims.play('idle', true);
             // Stop VFX here
             //
             // -----------------------------------------------------------
