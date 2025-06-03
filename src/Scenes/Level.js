@@ -7,14 +7,14 @@ class Level extends Phaser.Scene {
         // basic movement variables
         this.ACCELERATION = 2000;
         this.DRAG = 4000;  // if accel < drag, instant turning. if accel > drag, sliding
-        this.MAX_SPEED = 200;  // maximum speed while moving
+        this.MAX_SPEED = 150;  // maximum speed while moving
         this.MAX_FALL_SPEED = 800; // maximum speed while falling
 
         this.physics.world.gravity.y = 1500; // gravity setup
 
         this.ZOOM = 2.0;
 
-        this.JUMP_VELOCITY = -600;
+        this.JUMP_VELOCITY = -500;
         this.isJumping = false;
 
         /* variable jump variables (if you hold you jump higher like mario)
@@ -138,38 +138,91 @@ class Level extends Phaser.Scene {
             my.sprite.player.anims.play('idle', true);
             // Stop VFX here
             //
-            // -----------------------------------------------------------
+            // -----------------------------------------------------------d
         }
+
+        // Collisions with Walls
+        const onWallLeft = my.sprite.player.body.blocked.left;
+        const onWallRight = my.sprite.player.body.blocked.right;
+        const onWall = onWallLeft || onWallRight;
+        const onGround = my.sprite.player.body.blocked.down
+        const onRoof = my.sprite.player.body.blocked.up
 
         // Jumping logic starts here
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey) && this.jumpCount < this.MAX_JUMPS) {
             my.sprite.player.body.setVelocityY(this.JUMP_VELOCITY); // Initial burst of velocity to emulate a jump
             my.sprite.player.anims.play('jump', true);
             this.isJumping = true;
-            this.jumpCount++; 
+            this.jumpCount++;
+            if (onWall) {
+                this.wallJump = true; // Set wallJump to true when on wall
+                if (onWallLeft) {
+                    my.sprite.player.body.setVelocityX(400); // jump off to the right
+                    this.leftStick = false;
+                    this.rightStick = false;
+                } else if (onWallRight) {
+                    my.sprite.player.body.setVelocityX(-400); // jump off to the left
+                    this.leftStick = false;
+                    this.rightStick = false;
+                }
+            }
         }
+
+        if (!onWall) {  // If not on wall walljump is false
+            this.wallJump = false;
+        }
+        
 
         // reset total jumps when on the ground
         // remove 1 jump if player walked off a ledge before jumping
-        if (my.sprite.player.body.blocked.down) {
+        if (onGround || onWall) {
             this.jumpCount = 0;
         } else if (this.jumpCount === 0) {
             this.jumpCount = 1;
         }
 
         // stops jumping when head hits ceileing or space is released
-        if (Phaser.Input.Keyboard.JustUp(this.spaceKey) || my.sprite.player.body.blocked.up) {
+        if (Phaser.Input.Keyboard.JustUp(this.spaceKey) || onRoof) {
             this.isJumping = false;
+           
         }
 
         // Maximum speed limiters for falling and movement
-        if (Math.abs(my.sprite.player.body.velocity.x) > this.MAX_SPEED) { // X-axis limiter
+        if (Math.abs(my.sprite.player.body.velocity.x) > this.MAX_SPEED && !this.wallJump) { // X-axis limiter
             my.sprite.player.body.velocity.x = Phaser.Math.Clamp(my.sprite.player.body.velocity.x, -this.MAX_SPEED, this.MAX_SPEED);
         }
         if (Math.abs(my.sprite.player.body.velocity.y) > this.MAX_FALL_SPEED) { // Y-axis limiter
             my.sprite.player.body.velocity.y = Phaser.Math.Clamp(my.sprite.player.body.velocity.y, -this.MAX_FALL_SPEED, this.MAX_FALL_SPEED);
         }
-        
+
+        // Wall Climbing Logic >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        if (onWall || this.rightStick || this.leftStick) {
+            if (!this.wallJump && (this.dKey.isDown || this.aKey.isDown)) { // 
+            my.sprite.player.body.setVelocityY(-100);
+            } else if (this.rightStick || this.leftStick) {
+                my.sprite.player.body.setVelocityY(-5);
+            }
+            if(onWallRight || this.rightStick == true){
+                this.rightStick = true;
+                my.sprite.player.angle =- 90;
+                // my.sprite.player.body.setVelocityX(20);
+
+            }
+            if(onWallLeft || this.leftStick){
+                this.leftStick = true;
+                my.sprite.player.angle =- 270;
+                // my.sprite.player.body.setVelocityX(-20);
+
+            }
+        } else {
+            my.sprite.player.angle =- 0;
+        }
+
+        if (onGround && !onWall && (this.leftStick || this.rightStick)) {
+            this.leftStick = false;
+            this.rightStick = false;
+        }
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     }
 
     // function to create objects intended to reduce clutter in create()
