@@ -16,11 +16,21 @@ class Load extends Phaser.Scene {
         this.load.image("tilemap_tiles", "/tilemaps/tilemap_packed.png");  // Packed basic tilemap
         this.load.image("tilemap_tilesFRM", "/tilemaps/tilemap_packedFRM.png");  // Packed Farm tilemap
         this.load.image("tilemap_tilesIND", "/tilemaps/tilemap_packedIND.png");  // Packed Industrial tilemap
+        this.load.image("tilemap_tilesEXT", "/tilemaps/tilemap_packedEXT.png");  // Packed Extras tilemap
+
         this.load.tilemapTiledJSON("CatMap", "/tilemaps/CatMap.tmj");  // Tilemap in JSON
 
         // Load VFX
-        this.load.multiatlas("Kenny-particles", "/vfx/kenny-particles.json")
-
+        this.load.multiatlas("Kenny-particles", "/vfx/kenny-particles.json");
+        // load spirtesheets
+        this.load.spritesheet("spriteSheet_EXT", "/tilemaps/tilemap_packedEXT.png",{
+            frameWidth: 18,
+            frameHeight: 18
+        });
+        this.load.spritesheet("spriteSheet_FRM", "/tilemaps/tilemap_packedFRM.png",{
+            frameWidth: 18,
+            frameHeight: 18
+        });
     }
 
     create() {

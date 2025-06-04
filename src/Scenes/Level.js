@@ -60,6 +60,7 @@ class Level extends Phaser.Scene {
         this.tileset = this.map.addTilesetImage("Tiles", "tilemap_tiles");
         this.tilesetIND = this.map.addTilesetImage("TilesIND", "tilemap_tilesIND");
         this.tilesetFRM = this.map.addTilesetImage("TilesFRM", "tilemap_tilesFRM");
+        this.tilesetEXT = this.map.addTilesetImage("TilesEXT", "tilemap_tilesEXT");
 
         // Creating layers out of the tilemap in order from back to front.
         this.Paralax = this.map.createLayer("ParalaxBackground", [this.tileset, this.tilesetIND, this.tilesetFRM], 0, 0);
@@ -75,18 +76,44 @@ class Level extends Phaser.Scene {
             collides: true
         });
 
-        // creation of game objects and collisions go here
-        // + animations for those objects
-        //
-        // -----------------------------------------------------------
-
         // Create the player object, and set up collision with the ground
         my.sprite.player = this.physics.add.sprite(100, 100, "platformer_characters", "tile_0000.png"); //MAKE SURE TO CHANGE TO CAT WHEN SPRITE IS CREATED
         my.sprite.player.setCollideWorldBounds(true);
         this.physics.world.TILE_BIAS = 20;
         this.physics.add.collider(my.sprite.player, this.Ground);
+
+        // creation of game objects and collisions for those go here
+        my.object.Sushi = this.createObj("Sushi", "spriteSheet_EXT", 103);
+        my.object.Kibble = this.createObj("Kibble", "spriteSheet_FRM", 104);
+
+        // Enable Physics on Objects
+        
+        my.object.Sushi.forEach(o => this.physics.add.existing(o, true));
+        my.object.Kibble.forEach(o => this.physics.add.existing(o, true));
+        
+        // groups for objects
+        this.kibbleGroup = this.add.group(my.object.Kibble);
+        this.sushiGroup = this.add.group(my.object.Sushi);
+
+        
+        // + animations for those objects
+        //
+        // -----------------------------------------------------------
+
+        
         // future player collisions with objects / obstacles go here
         //
+        // collision handling for Sushi powerup
+        
+        this.physics.add.overlap(my.sprite.player, this.sushiGroup, (obj1, obj2) => {
+            obj2.destroy(); 
+        });
+
+        // collision handling or Kibble coin
+        this.physics.add.overlap(my.sprite.player, this.kibbleGroup, (obj1, obj2) => {
+            obj2.destroy(); 
+        });
+        
         //
         // -----------------------------------------------------------
 
@@ -147,6 +174,32 @@ class Level extends Phaser.Scene {
         const onWall = onWallLeft || onWallRight;
         const onGround = my.sprite.player.body.blocked.down
         const onRoof = my.sprite.player.body.blocked.up
+
+        // WALL STICK / SLIDE
+        if (onWall && !onGround && !this.wallJump) {
+            my.sprite.player.body.setAllowGravity(true);  // Gravity enabled
+            my.sprite.player.body.gravity.y = 200;        // Light gravity to allow slow slide
+            if (!this.dKey.isDown && !this.aKey.isDown) {
+                my.sprite.player.setVelocityY(50);        // Passive sliding down
+            }
+
+            // Wall sticking angle and flag
+            if (onWallRight) {
+                this.rightStick = true;
+                this.leftStick = false;
+                my.sprite.player.angle = -90;
+            } else if (onWallLeft) {
+                this.leftStick = true;
+                this.rightStick = false;
+                my.sprite.player.angle = -270;
+            }
+        } else {
+            // Reset wall stick if not on wall or just jumped off
+            this.leftStick = false;
+            this.rightStick = false;
+            my.sprite.player.angle = 0;
+            my.sprite.player.body.gravity.y = 800;  // Default gravity
+        }
 
         // Jumping logic starts here
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey) && this.jumpCount < this.MAX_JUMPS) {
@@ -215,19 +268,19 @@ class Level extends Phaser.Scene {
 
             }
         } else {
-            my.sprite.player.angle =- 0;
-        }
-
-        if (onGround && !onWall && (this.leftStick || this.rightStick)) {
             this.leftStick = false;
             this.rightStick = false;
+            my.sprite.player.angle =- 0;
         }
         // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+        // object collisions
+
     }
 
     // function to create objects intended to reduce clutter in create()
     createObj(name, key, frame) {
-        this.map.createFromObjects("Objects", {
+        return this.map.createFromObjects("Objects", {
             name: name,
             key: key,
             frame: frame

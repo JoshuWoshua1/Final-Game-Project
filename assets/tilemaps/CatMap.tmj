@@ -210,7 +210,55 @@
          "draworder":"topdown",
          "id":5,
          "name":"Objects",
-         "objects":[],
+         "objects":[
+                {
+                 "gid":508,
+                 "height":18,
+                 "id":8,
+                 "name":"Sushi",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":18,
+                 "x":324,
+                 "y":414
+                }, 
+                {
+                 "gid":397,
+                 "height":18,
+                 "id":19,
+                 "name":"Kibble",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":18,
+                 "x":180,
+                 "y":414
+                }, 
+                {
+                 "gid":397,
+                 "height":18,
+                 "id":20,
+                 "name":"Kibble",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":18,
+                 "x":198,
+                 "y":414
+                }, 
+                {
+                 "gid":397,
+                 "height":18,
+                 "id":21,
+                 "name":"Kibble",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":18,
+                 "x":216,
+                 "y":414
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
@@ -218,7 +266,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":1,
+ "nextobjectid":22,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
@@ -890,6 +938,38 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }],
+         "tilewidth":18
+        }, 
+        {
+         "columns":16,
+         "firstgid":405,
+         "image":"tilemap_packedEXT.png",
+         "imageheight":126,
+         "imagewidth":288,
+         "margin":0,
+         "name":"TilesEXT",
+         "spacing":0,
+         "tilecount":112,
+         "tileheight":18,
+         "tiles":[
+                {
+                 "id":87,
+                 "properties":[
+                        {
+                         "name":"powerUp",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }, 
+                {
+                 "id":105,
+                 "properties":[
+                        {
+                         "name":"kibble",
                          "type":"bool",
                          "value":true
                         }]
