@@ -36,9 +36,8 @@ class Load extends Phaser.Scene {
             frameHeight: 18
         });
 
-        this.load.on('loaderror', (file) => {
-    console.error('Failed to load:', file.key, file.src);
-});
+        // Load Sound
+        this.load.audio("clang", "sounds/metal_pot_jingle.wav");
     }
 
     create() {

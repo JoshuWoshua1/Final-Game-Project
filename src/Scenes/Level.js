@@ -14,6 +14,8 @@ class Level extends Phaser.Scene {
 
         this.ZOOM = 2.0;
 
+        this.PARTICLE_VELOCITY = 50;
+
         this.JUMP_VELOCITY = -500;
         this.isJumping = false;
 
@@ -37,23 +39,28 @@ class Level extends Phaser.Scene {
         this.MAX_JUMPS = 1;
 
         // vairables for attacks
-        this.SWIPE_COOLDOWN = 400; // milliseconds between attacks
+        this.SWIPE_COOLDOWN = 300; // milliseconds between attacks
         this.lastSwipeTime = 0;
-        this.SPIT_COOLDOWN = 150; //milliseconds between ranged attacks
+        this.SPIT_COOLDOWN = 700; //milliseconds between ranged attacks
         this.lastSpitTime = 0;
+
+        this.damage = 1;
+        this.playerHP = 10;
     }
     preload() {
         this.load.scenePlugin('AnimatedTiles', './lib/AnimatedTiles.js', 'animatedTiles', 'animatedTiles');
     }
 
     create() {
-        // Notes from Josh:
-        // added my.objects to help organize
-        // added some functions to reduce clutter for future coding
+        // ------------------------------------------ Notes from Josh: ----------------------------------------------------------------
+        // to make an enemy follow these steps on Tiled
+        // 1: Place a heart on the object layer and name it "Enenmy" and give it the custom Property: "PathID"(int)
+        // 2: Place two flags on the object layer and name them "Path" and give them the custom properties: "PathID"(int) and "fist"(bool)
+        // 3: Make sure they all have the same PathID, and only one of the "Path" objects is marked as first.
+        // 4: an enemy will spawn where the heart is and walk back and forth between where the two flag markers were.
 
         // load audio here
-        //
-        //
+        this.clangSound = this.sound.add("clang");
         // -----------------------------------------------------------
 
         // Create tilemap game object & set world bounds to the map size
@@ -81,6 +88,76 @@ class Level extends Phaser.Scene {
             collides: true
         });
 
+        // VFX go here
+        my.vfx.downSlash = this.add.particles(0, 0, "kenny-particles", { //VFX for down attack slash
+            frame: "twirl_01.png",
+            lifespan: 150,
+            quantity: 5,
+            scale: { start: 0.1, end: 0.1 },
+            alpha: { start: 1, end: 0.1 },
+            speed: 0,
+            rotate: { start: 90, end: 90 }
+        }); my.vfx.downSlash.stop();
+
+        my.vfx.upSlash = this.add.particles(0, 0, "kenny-particles", { //VFX for up attack slash
+            frame: "twirl_01.png",
+            lifespan: 150,
+            quantity: 5,
+            scale: { start: 0.1, end: 0.1 },
+            alpha: { start: 1, end: 0.1 },
+            speed: 0,
+            rotate: { start: 270, end: 270 }
+        }); my.vfx.upSlash.stop();
+
+        my.vfx.rightSlash = this.add.particles(0, 0, "kenny-particles", { //VFX for right attack slash
+            frame: "twirl_01.png",
+            lifespan: 150,
+            quantity: 5,
+            scale: { start: 0.1, end: 0.1 },
+            alpha: { start: 1, end: 0.1 },
+            speed: 0,
+            rotate: { start: 0, end: 0 }
+        }); my.vfx.rightSlash.stop();
+
+        my.vfx.leftSlash = this.add.particles(0, 0, "kenny-particles", { //VFX for right attack slash
+            frame: "twirl_01.png",
+            lifespan: 150,
+            quantity: 5,
+            scale: { start: 0.1, end: 0.1 },
+            alpha: { start: 1, end: 0.1 },
+            speed: 0,
+            rotate: { start: 180, end: 180 }
+        }); my.vfx.leftSlash.stop();
+
+        my.vfx.pogo = this.add.particles(0, 0, "kenny-particles", {
+            frame: "star_08.png",
+            lifespan: 150,
+            quantity: 1,
+            scale: { start: 0.09, end: 0 },
+            alpha: { start: 1, end: 0 },
+        });my.vfx.pogo.stop();
+        my.vfx.pogo.setDepth(10);
+
+        my.vfx.walking = this.add.particles(0, 0, "kenny-particles", {
+            frame: ['smoke_01.png', 'smoke_02.png', 'smoke_03.png'],
+            random: true,
+            scale: {start: 0.01, end: 0.08},
+            maxAliveParticles: 20,
+            lifespan: 200,
+            alpha: {start: 0.7, end: 0.1}, 
+        }); my.vfx.walking.stop();
+
+        my.vfx.jump = this.add.particles(0, 0, "kenny-particles", {
+            frame: ['smoke_01.png', 'smoke_02.png', 'smoke_03.png'],
+            random: true,
+            scale: {start: 0.08, end: 0.08},
+            lifespan: 500,
+            alpha: {start: 0.7, end: 0.1}, 
+            speedX: { min: -50, max: 50 },
+            quantity: 20
+        }); my.vfx.jump.stop();
+        //---------------------------------------------
+
         // Create the player object, and set up collision with the ground
         my.sprite.player = this.physics.add.sprite(100, 100, "platformer_characters", "tile_0000.png"); //MAKE SURE TO CHANGE TO CAT WHEN SPRITE IS CREATED
         my.sprite.player.setCollideWorldBounds(true);
@@ -90,27 +167,86 @@ class Level extends Phaser.Scene {
         // creation of game objects and collisions for those go here
         my.object.Sushi = this.createObj("Sushi", "spriteSheet_EXT", 103);
         my.object.Kibble = this.createObj("Kibble", "spriteSheet_FRM", 104);
+        my.object.Spike = this.createObj("Spike", "spriteSheet", 68);
 
         // Enable Physics on Objects
-        
         my.object.Sushi.forEach(o => this.physics.add.existing(o, true));
         my.object.Kibble.forEach(o => this.physics.add.existing(o, true));
+        my.object.Spike.forEach(o => this.physics.add.existing(o, true));
         
         // groups for objects
         this.kibbleGroup = this.add.group(my.object.Kibble);
         this.sushiGroup = this.add.group(my.object.Sushi);
+        this.spikeGroup = this.add.group(my.object.Spike);
         this.slashGroup = this.physics.add.group(); //phsyics group to handle attack hitbox
         this.projectiles = this.physics.add.group(); // physics group to handle ranged attack hitbox
+        this.enemies = this.physics.add.group(); //group for enemies
 
-
+        //change hitbox for spikes if they are flipped or not
+        this.spikeGroup.getChildren().forEach(spike => {
+            const flipdX = spike.flipX;
+            const flipdY = spike.flipY;
+            let wid = 18; let hei = 4; let offX = 0; let offY = 14;
+            if (flipdX) {
+                offX = spike.width - wid - offX;
+            }
+            if (flipdY) {
+                offY = spike.height - hei - offY;
+            }
+            spike.body.setSize(wid, hei);
+            spike.body.setOffset(offX, offY);
+        });
         
         // + animations for those objects
         //
         // -----------------------------------------------------------
 
+        // enemy handling and pathing
+        let enemyObjects = this.map.filterObjects("Objects", obj => obj.name === "Enemy");
+        let pathPoints = this.map.filterObjects("Objects", obj => obj.name === "Path");
+
+        //enemy setup
+        enemyObjects.forEach((enemyObj) => {
+            let enemy = this.physics.add.sprite(enemyObj.x+10, enemyObj.y-10, "platformer_characters", "tile_0016.png");
+            enemy.setCollideWorldBounds(true);
+            this.physics.add.collider(enemy, this.Ground);
+            enemy.enemyHp = 4;
+
+            // Grab PathID
+            const enemyPathID = enemyObj.properties.find(p => p.name === "PathID")?.value;
+
+            // Get matching path points
+            const matchedPoints = pathPoints.filter(p => {
+                return p.properties.find(prop => prop.name === "PathID")?.value === enemyPathID;
+            });
+
+            // Find first and second pathing points
+            const firstPoint = matchedPoints.find(p => p.properties.find(prop => prop.name === "first")?.value === true);
+            const secondPoint = matchedPoints.find(p => p !== firstPoint);
+
+            // Store pathing info in enemy object
+            enemy.patrol = {
+                points: [
+                    new Phaser.Math.Vector2(firstPoint.x+10, firstPoint.y-10),
+                    new Phaser.Math.Vector2(secondPoint.x+10, secondPoint.y-10)
+                ],
+                current: 1
+            };
+
+            // Flip the sprite based on movement direction
+            enemy.updateDirection = () => {
+                const target = enemy.patrol.points[enemy.patrol.current];
+                enemy.setFlipX(enemy.x > target.x);
+            };
+
+            enemy.updateDirection();
+            this.enemies.add(enemy);
+
+            enemy.body.setAllowGravity(true);
+        });
+
         
-        // future player collisions with objects / obstacles go here
-        //
+        // player collisions with objects / obstacles go here
         // collision handling for Sushi powerup
         
         this.physics.add.overlap(my.sprite.player, this.sushiGroup, (obj1, obj2) => {
@@ -121,8 +257,48 @@ class Level extends Phaser.Scene {
         this.physics.add.overlap(my.sprite.player, this.kibbleGroup, (obj1, obj2) => {
             obj2.destroy(); 
         });
-        
-        //
+
+        this.physics.add.collider(this.projectiles, this.Ground, (projectile, tile) => {
+            // add vfx puff when projectile hits ground
+            projectile.destroy();
+        });
+
+        this.physics.add.overlap(this.slashGroup, this.enemies, (slash, enemy) => {
+            enemy.enemyHp -= this.damage;
+            slash.destroy();
+            if (this.downSlash) {
+                my.sprite.player.setVelocityY(-550);
+            }
+            if (enemy.enemyHp <= 0) {
+                enemy.destroy();
+            }
+            this.clangSound.play({
+                volume: 0.4
+            });
+        });
+
+        this.physics.add.overlap(this.projectiles, this.enemies, (proj, enemy) => {
+            enemy.enemyHp -= this.damage;
+            proj.destroy();
+            if (enemy.enemyHp <= 0) {
+                enemy.destroy();
+            }
+            this.clangSound.play({
+                volume: 0.4
+            });
+        });
+
+        this.physics.add.collider(this.slashGroup, this.spikeGroup, (spike, slash) => {
+            // vfx for pogo
+            slash.destroy();
+            if (this.downSlash) {
+                my.sprite.player.setVelocityY(-550);
+            }
+            this.clangSound.play({
+                volume: 0.4
+            });
+            my.vfx.pogo.emitParticleAt(spike.body.center.x, spike.body.center.y);
+        });
         // -----------------------------------------------------------
 
         // setup for keyboard inputs
@@ -141,45 +317,6 @@ class Level extends Phaser.Scene {
         this.cameras.main.setDeadzone(60, 60);
         this.cameras.main.setZoom(this.ZOOM);
 
-        // VFX go here
-        my.vfx.downSlash = this.add.particles(0, 0, "kenny-particles", { //VFX for down attack slash
-            frame: "twirl_01.png",
-            lifespan: 150,
-            quantity: 5,
-            scale: { start: 0.1, end: 0.1 },
-            alpha: { start: 1, end: 0.1 },
-            speed: 0,
-            rotate: { start: 90, end: 90 }
-        }); my.vfx.downSlash.stop();
-        my.vfx.upSlash = this.add.particles(0, 0, "kenny-particles", { //VFX for up attack slash
-            frame: "twirl_01.png",
-            lifespan: 150,
-            quantity: 5,
-            scale: { start: 0.1, end: 0.1 },
-            alpha: { start: 1, end: 0.1 },
-            speed: 0,
-            rotate: { start: 270, end: 270 }
-        }); my.vfx.upSlash.stop();
-        my.vfx.rightSlash = this.add.particles(0, 0, "kenny-particles", { //VFX for right attack slash
-            frame: "twirl_01.png",
-            lifespan: 150,
-            quantity: 5,
-            scale: { start: 0.1, end: 0.1 },
-            alpha: { start: 1, end: 0.1 },
-            speed: 0,
-            rotate: { start: 0, end: 0 }
-        }); my.vfx.rightSlash.stop();
-        my.vfx.leftSlash = this.add.particles(0, 0, "kenny-particles", { //VFX for right attack slash
-            frame: "twirl_01.png",
-            lifespan: 150,
-            quantity: 5,
-            scale: { start: 0.1, end: 0.1 },
-            alpha: { start: 1, end: 0.1 },
-            speed: 0,
-            rotate: { start: 180, end: 180 }
-        }); my.vfx.leftSlash.stop();
-
-
         // DEBUG KEY ************************************* REMOVE ON FULL VERSION
         // debug key listener (assigned to F key)
         this.input.keyboard.on('keydown-F', () => {
@@ -190,6 +327,14 @@ class Level extends Phaser.Scene {
     }
 
     update() {
+        // constant variables for update
+        // Collisions with Walls
+        const onWallLeft = my.sprite.player.body.blocked.left;
+        const onWallRight = my.sprite.player.body.blocked.right;
+        const onWall = onWallLeft || onWallRight;
+        const onGround = my.sprite.player.body.blocked.down
+        const onRoof = my.sprite.player.body.blocked.up
+
         if(this.aKey.isDown) {
             my.sprite.player.setAccelerationX(-this.ACCELERATION);
             my.sprite.player.setFlip(true, false);
@@ -198,7 +343,13 @@ class Level extends Phaser.Scene {
             }
 
             // VFX implementation here
-            //
+            my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
+            if (my.sprite.player.body.blocked.down || onWall) {
+                my.vfx.walking.start();
+            } else {
+                my.vfx.walking.stop();
+            }
             // -----------------------------------------------------------
 
         } else if(this.dKey.isDown) {
@@ -207,8 +358,15 @@ class Level extends Phaser.Scene {
             if (!my.sprite.player.anims.isPlaying || my.sprite.player.anims.currentAnim.key === 'idle' || my.sprite.player.anims.currentAnim.key === 'walk') {
                 my.sprite.player.anims.play('walk', true);
             }
+
             // VFX implementation here
-            //
+            my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
+            if (my.sprite.player.body.blocked.down || onWall) {
+                my.vfx.walking.start();
+            } else {
+                my.vfx.walking.stop();
+            }
             // -----------------------------------------------------------
 
         } else { //when no button is pressed set acceleration to 0
@@ -219,16 +377,9 @@ class Level extends Phaser.Scene {
             }
             
             // Stop VFX here
-            //
-            // -----------------------------------------------------------d
+            my.vfx.walking.stop();
+            // -----------------------------------------------------------
         }
-
-        // Collisions with Walls
-        const onWallLeft = my.sprite.player.body.blocked.left;
-        const onWallRight = my.sprite.player.body.blocked.right;
-        const onWall = onWallLeft || onWallRight;
-        const onGround = my.sprite.player.body.blocked.down
-        const onRoof = my.sprite.player.body.blocked.up
 
         // WALL STICK / SLIDE
         if (onWall && !onGround && !this.wallJump) {
@@ -262,6 +413,8 @@ class Level extends Phaser.Scene {
             my.sprite.player.anims.play('jump', true);
             this.isJumping = true;
             this.jumpCount++;
+
+            // wall jump segment
             if (onWall) {
                 this.wallJump = true; // Set wallJump to true when on wall
                 if (onWallLeft) {
@@ -274,6 +427,12 @@ class Level extends Phaser.Scene {
                     this.rightStick = false;
                 }
             }
+
+            // jumping vfx
+            my.vfx.jump.emitParticleAt(
+                my.sprite.player.x,
+                my.sprite.player.y + my.sprite.player.displayHeight / 2  // emit below feet
+            );
         }
 
         if (!onWall) {  // If not on wall walljump is false
@@ -345,6 +504,7 @@ class Level extends Phaser.Scene {
                 vfxEmitter = my.vfx.upSlash;
                 angle = -180;
             } else if (this.sKey.isDown) {
+                this.downSlash = true;
                 offsetY = 20;
                 vfxEmitter = my.vfx.downSlash;
                 angle = 0;
@@ -380,12 +540,15 @@ class Level extends Phaser.Scene {
             // Set hitbox size based on slash direction
             if (angle === -90 || angle === 90) {
                 slashHitbox.setSize(50, 40); // horizontal slash
+            } else if (angle === 0) {
+                slashHitbox.setSize(40, 70); // downwards-vertical slash
             } else {
-                slashHitbox.setSize(40, 50); // vertical slash
+                slashHitbox.setSize(40, 50); // upwards-verticle slash
             }
 
             // Auto-destroy hitbox and reset flags
             this.time.delayedCall(150, () => {
+                this.downSlash = false;
                 if (slashHitbox && slashHitbox.destroy) slashHitbox.destroy();
             });
             this.time.delayedCall(1000, () => {
@@ -474,6 +637,23 @@ class Level extends Phaser.Scene {
                 //-----
             }
         }
+
+        this.enemies.getChildren().forEach(enemy => {
+            const target = enemy.patrol.points[enemy.patrol.current];
+            const direction = target.x > enemy.x ? 1 : -1;
+
+            // Only move left or right, gravity handles Y
+            enemy.setVelocityX(direction * 50);
+
+            // Flip sprite based on direction
+            enemy.setFlipX(direction < 0);
+
+            // Switch direction when close enough
+            if (Phaser.Math.Distance.Between(enemy.x, enemy.y, target.x, target.y) < 4) {
+                enemy.patrol.current = (enemy.patrol.current + 1) % 2;
+                enemy.updateDirection();
+            }
+        });
     }
 
     // function to create objects intended to reduce clutter in create()
