@@ -21,16 +21,24 @@ class Load extends Phaser.Scene {
         this.load.tilemapTiledJSON("CatMap", "/tilemaps/CatMap.tmj");  // Tilemap in JSON
 
         // Load VFX
-        this.load.multiatlas("Kenny-particles", "/vfx/kenny-particles.json");
+        this.load.multiatlas("kenny-particles", "vfx/kenny-particles-0.json", "assets/vfx/");
         // load spirtesheets
+        this.load.spritesheet("spriteSheet", "/tilemaps/tilemap_packed.png",{
+            frameWidth: 18,
+           frameHeight: 18
+        }); 
         this.load.spritesheet("spriteSheet_EXT", "/tilemaps/tilemap_packedEXT.png",{
             frameWidth: 18,
-            frameHeight: 18
-        });
+           frameHeight: 18
+        }); 
         this.load.spritesheet("spriteSheet_FRM", "/tilemaps/tilemap_packedFRM.png",{
             frameWidth: 18,
             frameHeight: 18
         });
+
+        this.load.on('loaderror', (file) => {
+    console.error('Failed to load:', file.key, file.src);
+});
     }
 
     create() {
@@ -63,6 +71,28 @@ class Load extends Phaser.Scene {
             frames: [
                 { frame: "Cat_3.png" }
             ],
+        });
+
+        this.anims.create({
+            key: 'attack',
+            defaultTextureKey: "cats",
+            frames: [
+                { frame: "Cat_4.png" },
+                { frame: "Cat_4.png" },
+                { frame: "Cat_4.png" }
+            ],
+            frameRate: 24
+        });
+
+        this.anims.create({
+            key: 'spit',
+            defaultTextureKey: "cats",
+            frames: [
+                { frame: "Cat_5.png" },
+                { frame: "Cat_5.png" },
+                { frame: "Cat_5.png" }
+            ],
+            frameRate: 30
         });
         // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********
 
