@@ -46,6 +46,8 @@ class Level extends Phaser.Scene {
 
         this.damage = 1;
         this.playerHP = 10;
+
+        this.score = 0;
     }
     preload() {
         this.load.scenePlugin('AnimatedTiles', './lib/AnimatedTiles.js', 'animatedTiles', 'animatedTiles');
@@ -156,6 +158,33 @@ class Level extends Phaser.Scene {
             speedX: { min: -50, max: 50 },
             quantity: 20
         }); my.vfx.jump.stop();
+
+        my.vfx.PowerUpCollect = this.add.particles(0,0, "spriteSheet_EXT", {
+            frame: 103,
+            random: true,
+            scale: { start: 0.6, end: 0.4 },
+            lifespan: 300,
+            alpha: { start: 1, end: 0 },
+            speed: { min: 100, max: 200 },
+            angle: { min: 0, max: 360 },
+            gravityY: 300,
+            quantity: 2,
+            rotate: { min: -180, max: 180 }
+        }); my.vfx.PowerUpCollect.stop();
+
+        my.vfx.Kibble = this.add.particles(0,0, "spriteSheet_FRM", {
+            frame: 104,
+            random: true,
+            scale: { start: 0.6, end: 0.4 },
+            lifespan: 300,
+            alpha: { start: 1, end: 0 },
+            speed: { min: 100, max: 200 },
+            angle: { min: 0, max: 360 },
+            gravityY: 300,
+            quantity: 2,
+            rotate: { min: -180, max: 180 }
+        }); my.vfx.Kibble.stop();
+
         //---------------------------------------------
 
         // Create the player object, and set up collision with the ground
@@ -196,6 +225,23 @@ class Level extends Phaser.Scene {
             spike.body.setSize(wid, hei);
             spike.body.setOffset(offX, offY);
         });
+        
+        // Create score text (fixed to camera) >>>>>>>>>>>>>>>>>>
+         this.scoreText = this.add.text(350, 575, 'FOODS: 0', {
+             fontSize: '15px',
+             fontFamily: 'Verdana',
+             color: '#41f500', 
+             stroke: '#000000',
+             strokeThickness: 6,
+             padding: { x: 10, y: 5 },
+         });
+         
+         // This makes the text stay in the same position on screen regardless of camera movement
+         this.scoreText.setScrollFactor(0);
+         this.scoreText.setDepth(9999); // Ensure it's always on top
+
+         // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
         
         // + animations for those objects
         //
@@ -251,11 +297,41 @@ class Level extends Phaser.Scene {
         
         this.physics.add.overlap(my.sprite.player, this.sushiGroup, (obj1, obj2) => {
             obj2.destroy(); 
+
+            // vfx for collecting powerup  
+            my.vfx.PowerUpCollect.start()
+            my.vfx.PowerUpCollect.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.PowerUpCollect.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
+            this.time.delayedCall(100, () => {
+                my.vfx.PowerUpCollect.stop();
+            });
+
+            // Run function that affects stats and runs vfx
+            this.time.addEvent({
+                callback: () => this.PowerUp(),
+            });
+            
+            // add to score
+            this.score += 100;
+            this.scoreText.setText('FOODS: ' + this.score); // reset scoreboard to accurately show score
+            
         });
 
         // collision handling or Kibble coin
         this.physics.add.overlap(my.sprite.player, this.kibbleGroup, (obj1, obj2) => {
             obj2.destroy(); 
+
+            my.vfx.Kibble.start()
+            my.vfx.Kibble.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.Kibble.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
+            this.time.delayedCall(100, () => {
+                my.vfx.Kibble.stop();
+            }); 
+            
+            
+            // add to score
+            this.score += 10;
+            this.scoreText.setText('FOODS: ' + this.score); // reset scoreboard to accurately show score
         });
 
         this.physics.add.collider(this.projectiles, this.Ground, (projectile, tile) => {
@@ -404,7 +480,6 @@ class Level extends Phaser.Scene {
             this.leftStick = false;
             this.rightStick = false;
             my.sprite.player.angle = 0;
-            my.sprite.player.body.gravity.y = 800;  // Default gravity
         }
 
         // Jumping logic starts here
@@ -664,5 +739,48 @@ class Level extends Phaser.Scene {
             frame: frame
         });
     }
+    PowerUp() {
+        //up the power of the jump
+        this.JUMP_VELOCITY -= 100;
+        this.MAX_SPEED += 100;
+
+        // up the power of attacks
+        this.SWIPE_COOLDOWN = 300 / 2; // milliseconds between attacks
+        this.lastSwipeTime = 0;
+        this.SPIT_COOLDOWN = 700 / 2; //milliseconds between ranged attacks
+        this.lastSpitTime = 0;
+
+        this.damage += 1;
+
+        // add effects while in power up
+        const overlay = this.add.sprite(0, 0, 'spriteSheet_RAINBOW').setScrollFactor(0);
+        overlay.setPosition(this.cameras.main.centerX, this.cameras.main.centerY);
+        overlay.displayWidth = this.cameras.main.width;
+        overlay.displayHeight = this.cameras.main.height;
+
+        overlay.setDepth(1000); // Or any high value
+        overlay.play('rainbow_anim');
+        overlay.setAlpha(.5); // transparency
+
+        //stop power up 
+        this.time.delayedCall(5000, () => {
+            this.JUMP_VELOCITY += 100;
+            this.MAX_SPEED -= 100;
+
+            // up the power of attacks
+            this.SWIPE_COOLDOWN = 300; // milliseconds between attacks
+            this.lastSwipeTime = 0;
+            this.SPIT_COOLDOWN = 700; //milliseconds between ranged attacks
+            this.lastSpitTime = 0;
+
+            this.damage -= 1;
+
+            overlay.stop();         // stop animation
+            overlay.setVisible(false);  // hide it
+
+        });
+
+    }
+
     
 }

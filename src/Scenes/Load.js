@@ -35,6 +35,10 @@ class Load extends Phaser.Scene {
             frameWidth: 18,
             frameHeight: 18
         });
+        this.load.spritesheet("spriteSheet_RAINBOW", "/vfx/rainbow_SpriteSheet.png",{
+            frameWidth: 500,
+            frameHeight: 325
+        });
 
         // Load Sound
         this.load.audio("clang", "sounds/metal_pot_jingle.wav");
@@ -94,6 +98,14 @@ class Load extends Phaser.Scene {
             frameRate: 30
         });
         // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********
+        
+        // Rainbow Animation for CatNip PowerUp 
+        this.anims.create({
+            key: 'rainbow_anim',
+            frames: this.anims.generateFrameNumbers('spriteSheet_RAINBOW', { start: 0, end: 19 }),
+            frameRate: 10,
+            repeat: -1
+        });
 
 
         // ends this scene, starts game
