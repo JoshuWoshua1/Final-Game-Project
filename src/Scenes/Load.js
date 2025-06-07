@@ -7,9 +7,6 @@ class Load extends Phaser.Scene {
         this.load.setPath("./assets/");
 
         // Load characters and enemies
-        // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********
-        this.load.atlas("platformer_characters", "/characters/tilemap-characters-packed.png", "/characters/tilemap-characters-packed.json");
-        // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********
         this.load.atlas("cats", "/characters/Cat_Sprites.png", "/characters/Cat_Sprites.json");
 
         // Load tilemap information
@@ -46,7 +43,7 @@ class Load extends Phaser.Scene {
 
     create() {
 
-        // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********
+        // walk cycle for player cat
         this.anims.create({
             key: 'walk',
             frames: [
@@ -57,6 +54,7 @@ class Load extends Phaser.Scene {
             repeat: -1
         });
 
+        // idle anim for player cat
         this.anims.create({
             key: 'idle',
             defaultTextureKey: "cats",
@@ -68,6 +66,7 @@ class Load extends Phaser.Scene {
             repeat: -1
         });
 
+        // jump anim for player cat
         this.anims.create({
             key: 'jump',
             defaultTextureKey: "cats",
@@ -76,6 +75,7 @@ class Load extends Phaser.Scene {
             ],
         });
 
+        // melee attack anim for player cat
         this.anims.create({
             key: 'attack',
             defaultTextureKey: "cats",
@@ -87,6 +87,7 @@ class Load extends Phaser.Scene {
             frameRate: 24
         });
 
+        // ranged attack anim for player cat
         this.anims.create({
             key: 'spit',
             defaultTextureKey: "cats",
@@ -97,7 +98,28 @@ class Load extends Phaser.Scene {
             ],
             frameRate: 30
         });
-        // ********** TEMPORARY UNTIL CAT SPRITE IS MADE **********
+        
+        // walk cycle for orange cat enemy
+        this.anims.create({
+            key: 'walkOrange',
+            frames: [
+                { key: 'cats', frame: 'Cat_7.png' },
+                { key: 'cats', frame: 'Cat_6.png' }
+            ],
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // walk cycle for black cat enemy
+        this.anims.create({
+            key: 'walkBlack',
+            frames: [
+                { key: 'cats', frame: 'Cat_9.png' },
+                { key: 'cats', frame: 'Cat_8.png' }
+            ],
+            frameRate: 7,
+            repeat: -1
+        });
         
         // Rainbow Animation for CatNip PowerUp 
         this.anims.create({

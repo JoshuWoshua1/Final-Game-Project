@@ -41,13 +41,14 @@ class Level extends Phaser.Scene {
         // vairables for attacks
         this.SWIPE_COOLDOWN = 300; // milliseconds between attacks
         this.lastSwipeTime = 0;
+        this.activeSlash = null; // helper for moving slash hitbox with player movement
         this.SPIT_COOLDOWN = 700; //milliseconds between ranged attacks
         this.lastSpitTime = 0;
 
         this.damage = 1;
-        this.playerHP = 10;
-
-        this.score = 0;
+        this.playerHP = 1;
+        this.invincible = false;
+        this.invincibleDuration = 1500;
     }
     preload() {
         this.load.scenePlugin('AnimatedTiles', './lib/AnimatedTiles.js', 'animatedTiles', 'animatedTiles');
@@ -159,7 +160,7 @@ class Level extends Phaser.Scene {
             quantity: 20
         }); my.vfx.jump.stop();
 
-        my.vfx.PowerUpCollect = this.add.particles(0,0, "spriteSheet_EXT", {
+        my.vfx.powerUpCollect = this.add.particles(0,0, "spriteSheet_EXT", {
             frame: 103,
             random: true,
             scale: { start: 0.6, end: 0.4 },
@@ -170,9 +171,9 @@ class Level extends Phaser.Scene {
             gravityY: 300,
             quantity: 2,
             rotate: { min: -180, max: 180 }
-        }); my.vfx.PowerUpCollect.stop();
+        }); my.vfx.powerUpCollect.stop();
 
-        my.vfx.Kibble = this.add.particles(0,0, "spriteSheet_FRM", {
+        my.vfx.kibble = this.add.particles(0,0, "spriteSheet_FRM", {
             frame: 104,
             random: true,
             scale: { start: 0.6, end: 0.4 },
@@ -183,12 +184,32 @@ class Level extends Phaser.Scene {
             gravityY: 300,
             quantity: 2,
             rotate: { min: -180, max: 180 }
-        }); my.vfx.Kibble.stop();
+        }); my.vfx.kibble.stop();
+
+        my.vfx.kill = this.add.particles(0, 0, "kenny-particles", {
+            frame: ['smoke_01.png', 'smoke_02.png', 'smoke_03.png'],
+            random: true,
+            speed: { min: -400, max: 400 },
+            scale: { start: 0.1, end: 0.05 },
+            lifespan: 300,
+            quantity: 20,
+            alpha: { start: 1, end: 0 },
+        }); my.vfx.kill.stop();
+
+        my.vfx.poof = this.add.particles(0, 0, "kenny-particles", {
+            frame: ['smoke_01.png', 'smoke_02.png', 'smoke_03.png'],
+            random: true,
+            speed: { min: -100, max: 100 },
+            scale: { start: 0.1, end: 0.05 },
+            lifespan: 200,
+            quantity: 10,
+            alpha: { start: 1, end: 0 },
+        }); my.vfx.poof.stop();
 
         //---------------------------------------------
 
         // Create the player object, and set up collision with the ground
-        my.sprite.player = this.physics.add.sprite(100, 100, "platformer_characters", "tile_0000.png"); //MAKE SURE TO CHANGE TO CAT WHEN SPRITE IS CREATED
+        my.sprite.player = this.physics.add.sprite(100, 100, "cats", "Cat_1.png"); //MAKE SURE TO CHANGE TO CAT WHEN SPRITE IS CREATED
         my.sprite.player.setCollideWorldBounds(true);
         this.physics.world.TILE_BIAS = 20;
         this.physics.add.collider(my.sprite.player, this.Ground);
@@ -197,16 +218,19 @@ class Level extends Phaser.Scene {
         my.object.Sushi = this.createObj("Sushi", "spriteSheet_EXT", 103);
         my.object.Kibble = this.createObj("Kibble", "spriteSheet_FRM", 104);
         my.object.Spike = this.createObj("Spike", "spriteSheet", 68);
+        my.object.Bed = this.createObj("Bed", "spriteSheet", 156);
 
         // Enable Physics on Objects
         my.object.Sushi.forEach(o => this.physics.add.existing(o, true));
         my.object.Kibble.forEach(o => this.physics.add.existing(o, true));
         my.object.Spike.forEach(o => this.physics.add.existing(o, true));
+        my.object.Bed.forEach(o => this.physics.add.existing(o, true));
         
         // groups for objects
         this.kibbleGroup = this.add.group(my.object.Kibble);
         this.sushiGroup = this.add.group(my.object.Sushi);
         this.spikeGroup = this.add.group(my.object.Spike);
+        this.bedGroup = this.add.group(my.object.Bed);
         this.slashGroup = this.physics.add.group(); //phsyics group to handle attack hitbox
         this.projectiles = this.physics.add.group(); // physics group to handle ranged attack hitbox
         this.enemies = this.physics.add.group(); //group for enemies
@@ -226,23 +250,34 @@ class Level extends Phaser.Scene {
             spike.body.setOffset(offX, offY);
         });
         
-        // Create score text (fixed to camera) >>>>>>>>>>>>>>>>>>
-         this.scoreText = this.add.text(350, 575, 'FOODS: 0', {
+        // Create score text (fixed to camera)
+        this.scoreText = this.add.text(350, 575, 'Score: 0', {
              fontSize: '15px',
              fontFamily: 'Verdana',
              color: '#41f500', 
              stroke: '#000000',
              strokeThickness: 6,
              padding: { x: 10, y: 5 },
-         });
+        });
+        // This makes the text stay in the same position on screen regardless of camera movement
+        this.scoreText.setScrollFactor(0);
+        this.scoreText.setDepth(9999); // Ensure it's always on top
+
+        //Create health Bar
+        this.healthBarBg = this.add.graphics(); // border of hp bar
+        this.healthBarBg.fillStyle(0x000000, 0.6);
+        this.healthBarBg.fillRect(370, 250, 210, 30);
+
+        this.healthBar = this.add.graphics(); // actual hp bar
+        this.healthBar.fillStyle(0x41f500, 1);
+
+        this.healthBar.setScrollFactor(0);
+        this.healthBarBg.setScrollFactor(0);
+        this.healthBar.setDepth(9998);
+        this.healthBarBg.setDepth(9997);
+
+        this.drawHealthBar(); // initailly call to create health bar
          
-         // This makes the text stay in the same position on screen regardless of camera movement
-         this.scoreText.setScrollFactor(0);
-         this.scoreText.setDepth(9999); // Ensure it's always on top
-
-         // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-        
         // + animations for those objects
         //
         // -----------------------------------------------------------
@@ -253,13 +288,26 @@ class Level extends Phaser.Scene {
 
         //enemy setup
         enemyObjects.forEach((enemyObj) => {
-            let enemy = this.physics.add.sprite(enemyObj.x+10, enemyObj.y-10, "platformer_characters", "tile_0016.png");
+            // Grab custom properties
+            const enemyPathID = enemyObj.properties.find(p => p.name === "PathID")?.value; //Path ID
+            const enemyColor = enemyObj.properties.find(p => p.name === "Color")?.value; //Color
+            
+            let enemy;
+
+            if (enemyColor === "orange") {
+                enemy = this.physics.add.sprite(enemyObj.x+10, enemyObj.y-10, "cats", "Cat_6.png");
+                enemy.anims.play('walkOrange', true);
+                enemy.enemyHp = 4;
+                enemy.speed = 50;
+            } else if (enemyColor === "black") {
+                enemy = this.physics.add.sprite(enemyObj.x+10, enemyObj.y-10, "cats", "Cat_8.png");
+                enemy.anims.play('walkBlack', true);
+                enemy.enemyHp = 8;
+                enemy.speed = 35;
+            }
             enemy.setCollideWorldBounds(true);
             this.physics.add.collider(enemy, this.Ground);
-            enemy.enemyHp = 4;
 
-            // Grab PathID
-            const enemyPathID = enemyObj.properties.find(p => p.name === "PathID")?.value;
 
             // Get matching path points
             const matchedPoints = pathPoints.filter(p => {
@@ -299,11 +347,11 @@ class Level extends Phaser.Scene {
             obj2.destroy(); 
 
             // vfx for collecting powerup  
-            my.vfx.PowerUpCollect.start()
-            my.vfx.PowerUpCollect.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
-            my.vfx.PowerUpCollect.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
+            my.vfx.powerUpCollect.start()
+            my.vfx.powerUpCollect.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.powerUpCollect.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
             this.time.delayedCall(100, () => {
-                my.vfx.PowerUpCollect.stop();
+                my.vfx.powerUpCollect.stop();
             });
 
             // Run function that affects stats and runs vfx
@@ -312,60 +360,98 @@ class Level extends Phaser.Scene {
             });
             
             // add to score
-            this.score += 100;
-            this.scoreText.setText('FOODS: ' + this.score); // reset scoreboard to accurately show score
-            
+            this.updateScore(100);
         });
 
         // collision handling or Kibble coin
         this.physics.add.overlap(my.sprite.player, this.kibbleGroup, (obj1, obj2) => {
             obj2.destroy(); 
 
-            my.vfx.Kibble.start()
-            my.vfx.Kibble.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
-            my.vfx.Kibble.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
+            my.vfx.kibble.start()
+            my.vfx.kibble.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.kibble.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
             this.time.delayedCall(100, () => {
-                my.vfx.Kibble.stop();
+                my.vfx.kibble.stop();
             }); 
             
-            
             // add to score
-            this.score += 10;
-            this.scoreText.setText('FOODS: ' + this.score); // reset scoreboard to accurately show score
+            this.updateScore(10);
         });
 
-        this.physics.add.collider(this.projectiles, this.Ground, (projectile, tile) => {
+        this.physics.add.overlap(my.sprite.player, this.bedGroup, (player, bed) => { // heal player and stop movement for a second when in bed
+            if (!this.lastBedHeal || this.time.now - this.lastBedHeal > 5000) {
+                this.lastBedHeal = this.time.now;
+                this.healing = true;
+                player.anims.play('idle', true);
+                this.playerHP = 10;
+                this.drawHealthBar();
+                player.x = bed.x;
+                player.y = bed.y-10;
+
+                player.setVelocity(0, 0);
+                player.setAcceleration(0, 0);
+                player.body.moves = false;
+                
+                this.time.delayedCall(2000, () => {
+                    this.healing = false;
+                    player.body.moves = true;
+                });
+            }
+        });
+
+        this.physics.add.collider(this.projectiles, this.Ground, (projectile, tile) => { // projectiles breaking when hitting ground
             // add vfx puff when projectile hits ground
+            my.vfx.poof.emitParticleAt(
+                projectile.x,
+                projectile.y,
+            );
             projectile.destroy();
         });
 
-        this.physics.add.overlap(this.slashGroup, this.enemies, (slash, enemy) => {
+        this.physics.add.overlap(this.slashGroup, this.enemies, (slash, enemy) => { // attacking enemy with slash
             enemy.enemyHp -= this.damage;
+            my.vfx.poof.emitParticleAt(
+                (slash.x + enemy.x) / 2,
+                (slash.y + enemy.y) / 2,
+            );
             slash.destroy();
             if (this.downSlash) {
                 my.sprite.player.setVelocityY(-550);
             }
             if (enemy.enemyHp <= 0) {
+                my.vfx.kill.emitParticleAt(
+                    enemy.x,
+                    enemy.y,
+                );
                 enemy.destroy();
+                this.updateScore(200);
             }
             this.clangSound.play({
                 volume: 0.4
             });
         });
 
-        this.physics.add.overlap(this.projectiles, this.enemies, (proj, enemy) => {
+        this.physics.add.overlap(this.projectiles, this.enemies, (proj, enemy) => { // attacking enemy with projectile
             enemy.enemyHp -= this.damage;
+            my.vfx.poof.emitParticleAt(
+                proj.x,
+                proj.y,
+            );
             proj.destroy();
             if (enemy.enemyHp <= 0) {
+                my.vfx.kill.emitParticleAt(
+                    enemy.x,
+                    enemy.y,
+                );
                 enemy.destroy();
+                this.updateScore(200);
             }
             this.clangSound.play({
                 volume: 0.4
             });
         });
 
-        this.physics.add.collider(this.slashGroup, this.spikeGroup, (spike, slash) => {
-            // vfx for pogo
+        this.physics.add.collider(this.slashGroup, this.spikeGroup, (spike, slash) => { // pogoing off of a spike with slash
             slash.destroy();
             if (this.downSlash) {
                 my.sprite.player.setVelocityY(-550);
@@ -375,11 +461,43 @@ class Level extends Phaser.Scene {
             });
             my.vfx.pogo.emitParticleAt(spike.body.center.x, spike.body.center.y);
         });
+
+        this.physics.add.collider(my.sprite.player, this.spikeGroup, (player, spike) => { // player hitting spike
+            if (this.invincible) return;  // Skip if invincible
+            this.invincible = true;
+
+            this.playerHP -= 1;
+            this.drawHealthBar();
+            my.sprite.player.setVelocityY(-450)
+            this.time.delayedCall(this.invincibleDuration, () => {
+                this.invincible = false;
+            });
+        });
+
+        this.physics.add.collider(my.sprite.player, this.enemies, (player, enemy) => { // player colliding with enemy
+            if (this.invincible) return;  // Skip if invincible
+            this.invincible = true;
+
+            this.playerHP -= 1;
+            this.drawHealthBar();
+            this.knockedBack = true;
+            const knockbackSpeed = 350;
+            const knockbackDirection = player.x < enemy.x ? -1 : 1;
+
+            player.setVelocityX(knockbackSpeed * knockbackDirection);
+            player.setVelocityY(-30);
+            this.time.delayedCall(300, () => {
+                this.knockedBack = false;
+            });
+            this.time.delayedCall(this.invincibleDuration, () => {
+                this.invincible = false;
+            });
+        });
         // -----------------------------------------------------------
 
         // setup for keyboard inputs
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.controlKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
+        this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.wKey = this.input.keyboard.addKey('W');
         this.aKey = this.input.keyboard.addKey('A');
         this.sKey = this.input.keyboard.addKey('S');
@@ -411,50 +529,50 @@ class Level extends Phaser.Scene {
         const onGround = my.sprite.player.body.blocked.down
         const onRoof = my.sprite.player.body.blocked.up
 
-        if(this.aKey.isDown) {
-            my.sprite.player.setAccelerationX(-this.ACCELERATION);
-            my.sprite.player.setFlip(true, false);
-            if (!my.sprite.player.anims.isPlaying || my.sprite.player.anims.currentAnim.key === 'idle' || my.sprite.player.anims.currentAnim.key === 'walk') {
-                my.sprite.player.anims.play('walk', true);
-            }
+        if (!this.healing) {
+            if (this.aKey.isDown) {
+                my.sprite.player.setAccelerationX(-this.ACCELERATION);
+                my.sprite.player.setFlip(true, false);
+                if (!my.sprite.player.anims.isPlaying || my.sprite.player.anims.currentAnim.key === 'idle' || my.sprite.player.anims.currentAnim.key === 'walk') {
+                    my.sprite.player.anims.play('walk', true);
+                }
 
-            // VFX implementation here
-            my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
-            my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
-            if (my.sprite.player.body.blocked.down || onWall) {
-                my.vfx.walking.start();
-            } else {
+                // VFX
+                my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+                my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
+                if (my.sprite.player.body.blocked.down || onWall) {
+                    my.vfx.walking.start();
+                } else {
+                    my.vfx.walking.stop();
+                }
+                
+
+            } else if (this.dKey.isDown) {
+                my.sprite.player.setAccelerationX(this.ACCELERATION);
+                my.sprite.player.resetFlip();
+                if (!my.sprite.player.anims.isPlaying || my.sprite.player.anims.currentAnim.key === 'idle' || my.sprite.player.anims.currentAnim.key === 'walk') {
+                    my.sprite.player.anims.play('walk', true);
+                }
+
+                // VFX
+                my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+                my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
+                if (my.sprite.player.body.blocked.down || onWall) {
+                    my.vfx.walking.start();
+                } else {
+                    my.vfx.walking.stop();
+                }
+
+            } else { //when no button is pressed set acceleration to 0
+                my.sprite.player.setAccelerationX(0);
+                my.sprite.player.setDragX(this.DRAG);
+                if (!my.sprite.player.anims.isPlaying || my.sprite.player.anims.currentAnim.key === 'idle' || my.sprite.player.anims.currentAnim.key === 'walk') {
+                    my.sprite.player.anims.play('idle', true);
+                }
+                
+                // Stop VFX
                 my.vfx.walking.stop();
             }
-            // -----------------------------------------------------------
-
-        } else if(this.dKey.isDown) {
-            my.sprite.player.setAccelerationX(this.ACCELERATION);
-            my.sprite.player.resetFlip();
-            if (!my.sprite.player.anims.isPlaying || my.sprite.player.anims.currentAnim.key === 'idle' || my.sprite.player.anims.currentAnim.key === 'walk') {
-                my.sprite.player.anims.play('walk', true);
-            }
-
-            // VFX implementation here
-            my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
-            my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
-            if (my.sprite.player.body.blocked.down || onWall) {
-                my.vfx.walking.start();
-            } else {
-                my.vfx.walking.stop();
-            }
-            // -----------------------------------------------------------
-
-        } else { //when no button is pressed set acceleration to 0
-            my.sprite.player.setAccelerationX(0);
-            my.sprite.player.setDragX(this.DRAG);
-            if (!my.sprite.player.anims.isPlaying || my.sprite.player.anims.currentAnim.key === 'idle' || my.sprite.player.anims.currentAnim.key === 'walk') {
-                my.sprite.player.anims.play('idle', true);
-            }
-            
-            // Stop VFX here
-            my.vfx.walking.stop();
-            // -----------------------------------------------------------
         }
 
         // WALL STICK / SLIDE
@@ -530,14 +648,14 @@ class Level extends Phaser.Scene {
         }
 
         // Maximum speed limiters for falling and movement
-        if (Math.abs(my.sprite.player.body.velocity.x) > this.MAX_SPEED && !this.wallJump && !this.isDashing) { // X-axis limiter
+        if (Math.abs(my.sprite.player.body.velocity.x) > this.MAX_SPEED && !this.wallJump && !this.isDashing && !this.knockedBack) { // X-axis limiter
             my.sprite.player.body.velocity.x = Phaser.Math.Clamp(my.sprite.player.body.velocity.x, -this.MAX_SPEED, this.MAX_SPEED);
         }
         if (Math.abs(my.sprite.player.body.velocity.y) > this.MAX_FALL_SPEED) { // Y-axis limiter
             my.sprite.player.body.velocity.y = Phaser.Math.Clamp(my.sprite.player.body.velocity.y, -this.MAX_FALL_SPEED, this.MAX_FALL_SPEED);
         }
 
-        // Wall Climbing Logic >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        // Wall Climbing Logic
         if (onWall || this.rightStick || this.leftStick) {
             if (!this.wallJump && (this.dKey.isDown || this.aKey.isDown)) { 
             my.sprite.player.body.setVelocityY(-100);
@@ -559,9 +677,6 @@ class Level extends Phaser.Scene {
             this.rightStick = false;
             my.sprite.player.angle =- 0;
         }
-        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-        // object collisions
 
         // swipe attack
         const swipe_now = this.time.now;
@@ -603,33 +718,45 @@ class Level extends Phaser.Scene {
             );
 
             // Create invisible hitbox
-            const slashHitbox = this.slashGroup.create(
+            this.activeSlash = this.slashGroup.create(
                 my.sprite.player.x + offsetX,
                 my.sprite.player.y + offsetY,
                 null
             );
+            this.activeSlash.setVisible(false);
+            this.activeSlash.body.allowGravity = false;
+            this.activeSlash.offsetX = offsetX;
+            this.activeSlash.offsetY = offsetY;
 
-            slashHitbox.setVisible(false);          // Invisible hitbox
-            slashHitbox.body.allowGravity = false;
+            this.activeSlash.setVisible(false);          // Invisible hitbox
+            this.activeSlash.body.allowGravity = false;
 
             // Set hitbox size based on slash direction
             if (angle === -90 || angle === 90) {
-                slashHitbox.setSize(50, 40); // horizontal slash
+                this.activeSlash.setSize(50, 40); // horizontal slash
             } else if (angle === 0) {
-                slashHitbox.setSize(40, 70); // downwards-vertical slash
+                this.activeSlash.setSize(40, 50); // downwards-vertical slash
             } else {
-                slashHitbox.setSize(40, 50); // upwards-verticle slash
+                this.activeSlash.setSize(40, 50); // upwards-verticle slash
             }
 
             // Auto-destroy hitbox and reset flags
-            this.time.delayedCall(150, () => {
+            this.time.delayedCall(100, () => {
                 this.downSlash = false;
-                if (slashHitbox && slashHitbox.destroy) slashHitbox.destroy();
+                if (this.activeSlash && this.activeSlash.destroy) this.activeSlash.destroy();
             });
             this.time.delayedCall(1000, () => {
                 my.sprite.player.anims.play('idle', true);
             });
             
+        }
+
+        // allows slash to move with player for better game feel
+        if (this.activeSlash) {
+            this.activeSlash.setPosition(
+                my.sprite.player.x + this.activeSlash.offsetX,
+                my.sprite.player.y + this.activeSlash.offsetY
+            );
         }
         
         // ranged attack
@@ -676,12 +803,10 @@ class Level extends Phaser.Scene {
         // dashing
         const dash_now = this.time.now;
         // Start dash if control is pressed, player is not already dashing, and cooldown passed
-        if (Phaser.Input.Keyboard.JustDown(this.controlKey) && !this.isDashing && dash_now - this.lastDash > this.DASH_COOLDOWN) {
+        if (Phaser.Input.Keyboard.JustDown(this.shiftKey) && !this.isDashing && dash_now - this.lastDash > this.DASH_COOLDOWN) {
             this.isDashing = true;
             this.dashTimer = 0;
             this.lastDash = dash_now;
-
-            console.log('blah')
 
             //audio
             //
@@ -718,7 +843,7 @@ class Level extends Phaser.Scene {
             const direction = target.x > enemy.x ? 1 : -1;
 
             // Only move left or right, gravity handles Y
-            enemy.setVelocityX(direction * 50);
+            enemy.setVelocityX(direction * enemy.speed);
 
             // Flip sprite based on direction
             enemy.setFlipX(direction < 0);
@@ -739,18 +864,18 @@ class Level extends Phaser.Scene {
             frame: frame
         });
     }
+
+    // function to apply power up and its overlay
     PowerUp() {
         //up the power of the jump
         this.JUMP_VELOCITY -= 100;
         this.MAX_SPEED += 100;
 
         // up the power of attacks
-        this.SWIPE_COOLDOWN = 300 / 2; // milliseconds between attacks
-        this.lastSwipeTime = 0;
-        this.SPIT_COOLDOWN = 700 / 2; //milliseconds between ranged attacks
-        this.lastSpitTime = 0;
+        this.SWIPE_COOLDOWN = 150; // milliseconds between attacks
+        this.SPIT_COOLDOWN = 350; //milliseconds between ranged attacks
 
-        this.damage += 1;
+        this.damage = 2;
 
         // add effects while in power up
         const overlay = this.add.sprite(0, 0, 'spriteSheet_RAINBOW').setScrollFactor(0);
@@ -758,28 +883,39 @@ class Level extends Phaser.Scene {
         overlay.displayWidth = this.cameras.main.width;
         overlay.displayHeight = this.cameras.main.height;
 
-        overlay.setDepth(1000); // Or any high value
+        overlay.setDepth(1000);
         overlay.play('rainbow_anim');
-        overlay.setAlpha(.5); // transparency
+        overlay.setAlpha(.5);
 
-        //stop power up 
+        // stop power up by reseting attributes
         this.time.delayedCall(5000, () => {
             this.JUMP_VELOCITY += 100;
             this.MAX_SPEED -= 100;
-
-            // up the power of attacks
             this.SWIPE_COOLDOWN = 300; // milliseconds between attacks
-            this.lastSwipeTime = 0;
             this.SPIT_COOLDOWN = 700; //milliseconds between ranged attacks
-            this.lastSpitTime = 0;
 
-            this.damage -= 1;
+            this.damage = 1;
 
-            overlay.stop();         // stop animation
-            overlay.setVisible(false);  // hide it
-
+            overlay.stop();
+            overlay.setVisible(false);
         });
+    }
 
+    updateScore(num) { //function to update score and change the graphic at the same time
+        score += num;
+        this.scoreText.setText('Score: ' + score);
+    }
+
+    drawHealthBar() { // updates the health bar in accordance to this.playerHP
+        this.healthBar.clear();
+
+        const maxHP = 10;
+        const barWidth = 200;
+        const barHeight = 20;
+        const hpRatio = Phaser.Math.Clamp(this.playerHP / maxHP, 0, 1);
+
+        this.healthBar.fillStyle(0x00ff00);
+        this.healthBar.fillRect(375, 255, barWidth * hpRatio, barHeight);
     }
 
     
