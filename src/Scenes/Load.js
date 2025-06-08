@@ -144,7 +144,8 @@ class Load extends Phaser.Scene {
 
 
         // ends this scene, starts game
-         this.scene.start("levelScene");
+        this.scene.start(/* main menu */);
+        this.scene.start("levelScene");
     }
 
     update() {

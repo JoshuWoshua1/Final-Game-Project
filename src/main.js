@@ -10,7 +10,6 @@ let config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true,
             gravity: {
                 x: 0,
                 y: 0
@@ -22,7 +21,8 @@ let config = {
     scene: [Load, Level]
 }
 
-var score = 0;
+var high_score = 0;
+var most_diamonds = 0;
 var cursors;
 const SCALE = 2.0;
 var my = {sprite: {}, text: {}, vfx: {}, object: {}};

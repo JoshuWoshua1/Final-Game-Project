@@ -19,12 +19,6 @@ class Level extends Phaser.Scene {
         this.JUMP_VELOCITY = -500;
         this.isJumping = false;
 
-        /* variable jump variables (if you hold you jump higher like mario)
-        this.jumpTimer = 0;
-        this.MAX_JUMP_TIME = 200;
-        this.HOLD_JUMP_VELOCITY = -300; 
-        */
-
         // Dash variables
         this.DASH_SPEED = 1000;
         this.DASH_DURATION = 100;
@@ -54,19 +48,13 @@ class Level extends Phaser.Scene {
         this.flickerInterval = 100;
 
         this.diamonds = 0;
+        this.score = 0;
     }
     preload() {
         this.load.scenePlugin('AnimatedTiles', './lib/AnimatedTiles.js', 'animatedTiles', 'animatedTiles');
     }
 
     create() {
-        // ------------------------------------------ Notes from Josh: ----------------------------------------------------------------
-        // to make an enemy follow these steps on Tiled
-        // 1: Place a heart on the object layer and name it "Enenmy" and give it the custom Property: "PathID"(int)
-        // 2: Place two flags on the object layer and name them "Path" and give them the custom properties: "PathID"(int) and "fist"(bool)
-        // 3: Make sure they all have the same PathID, and only one of the "Path" objects is marked as first.
-        // 4: an enemy will spawn where the heart is and walk back and forth between where the two flag markers were.
-
         // load audio here
         this.clangSound = this.sound.add("clang");
         this.eatSound = this.sound.add("eat");
@@ -102,11 +90,19 @@ class Level extends Phaser.Scene {
         this.BigBG = this.Bbackground.createLayer("bigBackground", [this.tilesetBG], 0, 0);
         this.BigBG.setScale(5);
         this.BigBG.setScrollFactor(0.2, 0.1);
-        this.Paralax = this.map.createLayer("ParalaxBackground", [this.tileset, this.tilesetIND, this.tilesetFRM], 0, 0);
-        this.Background = this.map.createLayer("Background", [this.tileset, this.tilesetIND, this.tilesetFRM], 0, 0);
-        this.DecoWalls = this.map.createLayer("Deco&Walls", [this.tileset, this.tilesetIND, this.tilesetFRM], 0, 0);
-        this.Ground = this.map.createLayer("Ground", [this.tileset, this.tilesetIND, this.tilesetFRM], 0, 0);
+        this.Paralax = this.map.createLayer("ParalaxBackground", [this.tileset, this.tilesetIND, this.tilesetFRM, this.tilesetEXT], 0, 0);
+        this.darkOverlay = this.add.rectangle(
+            0, 0,
+            this.map.widthInPixels,
+            this.map.heightInPixels,
+            0x000000,
+            0.2
+        ).setOrigin(0, 0);
+        this.Background = this.map.createLayer("Background", [this.tileset, this.tilesetIND, this.tilesetFRM, this.tilesetEXT], 0, 0);
+        this.DecoWalls = this.map.createLayer("Deco&Walls", [this.tileset, this.tilesetIND, this.tilesetFRM, this.tilesetEXT], 0, 0);
+        this.Ground = this.map.createLayer("Ground", [this.tileset, this.tilesetIND, this.tilesetFRM, this.tilesetEXT], 0, 0);
         this.Paralax.setScrollFactor(0.5, 0.5); //set paralax scrolling
+        this.Paralax.setScale(3);
 
         // initalize animated tiles for tilemap
         this.animatedTiles.init(this.map);
@@ -268,6 +264,9 @@ class Level extends Phaser.Scene {
             name: "Hazard"
         });
         my.object.Diamond = this.createObj("Diamond", "spriteSheet", 67);
+        my.object.Button = this.createObj("Button", "spriteSheet", 148);
+        my.object.Lock = this.createObj("Lock", "spriteSheet", 28);
+        my.object.Home = this.createObj("Home", "spriteSheet", 156);
 
         // Enable Physics on Objects
         my.object.Sushi.forEach(o => this.physics.add.existing(o, true));
@@ -276,6 +275,18 @@ class Level extends Phaser.Scene {
         my.object.Bed.forEach(o => this.physics.add.existing(o, true));
         my.object.Hazard.forEach(o => {this.physics.add.existing(o, true); o.setVisible(false);});
         my.object.Diamond.forEach(o => {this.physics.add.existing(o, true);});
+        my.object.Button.forEach(o => {
+            this.physics.add.existing(o, true);
+            o.setData("LockLink", o.getData("LockLink"));
+            o.setData("activated", false);  // track activation state
+        });
+        my.object.Lock.forEach(o => {
+            this.physics.add.existing(o, true);
+            o.setData("LockLink", o.getData("LockLink"));
+            console.log(o.getData("LockLink"));
+        });
+        my.object.Home.forEach(o => this.physics.add.existing(o, true));
+
         
         // groups for objects
         this.kibbleGroup = this.add.group(my.object.Kibble);
@@ -287,6 +298,8 @@ class Level extends Phaser.Scene {
         this.enemies = this.physics.add.group(); //group for enemies
         this.hazardGroup = this.add.group(my.object.Hazard);
         this.diamondGroup = this.add.group(my.object.Diamond);
+        this.buttonGroup = this.add.group(my.object.Button);
+        this.lockGroup = this.add.group(my.object.Lock);
 
         //change hitbox for spikes if they are flipped or not
         this.spikeGroup.getChildren().forEach(spike => {
@@ -317,6 +330,24 @@ class Level extends Phaser.Scene {
         this.scoreText.setScrollFactor(0);
         this.scoreText.setDepth(9999); // Ensure it's always on top
 
+        // Create diamond count text
+        this.diamondText = this.add.text(162 * this.ZOOM, 116 * this.ZOOM, '    : 0/3', {
+             fontSize: '72px',
+             fontFamily: 'Verdana',
+             color: '#00f5fa', 
+             stroke: '#000000',
+             strokeThickness: 10,
+             padding: { x: 10, y: 5 },
+        });
+        this.diamondUI = this.add.image(166 * this.ZOOM, 120 * this.ZOOM, "spriteSheet", 67);
+
+        this.diamondUI.setScale(1.66);
+        this.diamondUI.setScrollFactor(0);
+        this.diamondUI.setDepth(9999);
+        this.diamondText.setScale(0.2);
+        this.diamondText.setScrollFactor(0);
+        this.diamondText.setDepth(9999);
+
         //Create health Bar
         this.healthBarBg = this.add.graphics(); // border of hp bar
         this.healthBarBg.fillStyle(0x000000, 0.6);
@@ -335,10 +366,6 @@ class Level extends Phaser.Scene {
         this.dashCooldownUI = this.add.graphics(); //radial dash timer
         this.dashCooldownUI.setScrollFactor(0);
         this.dashCooldownUI.setDepth(9996);
-        
-        // + animations for those objects
-        //
-        // -----------------------------------------------------------
 
         // enemy handling and pathing
         let enemyObjects = this.map.filterObjects("Objects", obj => obj.name === "Enemy");
@@ -400,8 +427,10 @@ class Level extends Phaser.Scene {
 
         
         // player collisions with objects / obstacles go here
-        // collision handling for Sushi powerup
         
+        this.physics.add.collider(my.sprite.player, this.lockGroup); // collision with locks
+
+        // collision handling for Sushi powerup
         this.physics.add.overlap(my.sprite.player, this.sushiGroup, (obj1, obj2) => {
             obj2.destroy(); 
             this.eatSound.play({
@@ -432,7 +461,7 @@ class Level extends Phaser.Scene {
         this.physics.add.overlap(my.sprite.player, this.kibbleGroup, (obj1, obj2) => {
             obj2.destroy(); 
             this.eatSound.play({
-                volume: 0.25
+                volume: 0.22
             });
 
             my.vfx.kibble.start()
@@ -449,7 +478,7 @@ class Level extends Phaser.Scene {
         this.physics.add.overlap(my.sprite.player, this.diamondGroup, (obj1, obj2) => { // collecting diamonds
             obj2.destroy(); 
             this.diamondSound.play({
-                volume: 0.25
+                volume: 0.4
             });
 
             my.vfx.diamond.start()
@@ -462,7 +491,25 @@ class Level extends Phaser.Scene {
             // add to score
             this.updateScore(500);
             // update total diamond count
-            this.diamonds += 1;
+            this.updateDiamond(1);
+        });
+
+        this.physics.add.overlap(this.projectiles, this.buttonGroup, (button, projectile) => { // Button collision with spit
+            if (button.getData("activated")) return;
+            button.setData("activated", true);
+            projectile.destroy();
+
+            const linkID = button.getData("LockLink");
+
+            // make the button press down after hit
+            button.setFrame(149);
+
+            // Find and destroy matching locks
+            my.object.Lock.forEach(lock => {
+                if (lock.getData("LockLink") === linkID) {
+                    lock.destroy();
+                }
+            });
         });
 
         this.physics.add.overlap(my.sprite.player, this.bedGroup, (player, bed) => { // heal player and stop movement for a second when in bed
@@ -485,6 +532,29 @@ class Level extends Phaser.Scene {
                 this.time.delayedCall(2000, () => {
                     this.healing = false;
                     player.body.moves = true;
+                });
+            }
+        });
+
+        this.physics.add.overlap(my.sprite.player, my.object.Home, (player, home) => { // end game and stop player movement when in final bed
+            if (!this.lastBedHeal || this.time.now - this.lastBedHeal > 5000) {
+                this.lastBedHeal = this.time.now;
+                this.healing = true;
+                this.healSound.play({
+                    volume: 0.4
+                });
+                player.anims.play('idle', true);
+                this.playerHP = 5;
+                this.drawHealthBar();
+                player.x = home.x;
+                player.y = home.y-10;
+
+                player.setVelocity(0, 0);
+                player.setAcceleration(0, 0);
+                player.body.moves = false;
+                this.time.delayedCall(1000, () => {
+                    this.scene.pause();
+                    this.scene.launch(/*---------------------- WIN SCENE NAME ---------------------------------*/)
                 });
             }
         });
@@ -622,14 +692,6 @@ class Level extends Phaser.Scene {
         this.cameras.main.startFollow(my.sprite.player, true, 0.25, 0.25);
         this.cameras.main.setDeadzone(60, 60);
         this.cameras.main.setZoom(this.ZOOM);
-
-        // DEBUG KEY ************************************* REMOVE ON FULL VERSION
-        // debug key listener (assigned to F key)
-        this.input.keyboard.on('keydown-F', () => {
-            this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true
-            this.physics.world.debugGraphic.clear()
-        }, this);
-        // DEBUG KEY ************************************* REMOVE ON FULL VERSION
     }
 
     update() {
@@ -991,15 +1053,31 @@ class Level extends Phaser.Scene {
         });
 
         //sprite flicker when i-frames are active
-        if (this.invincible) {
+        if (this.invincible && !this.alreadyDead) {
             this.flickerTimer += this.game.loop.delta;
 
             if (this.flickerTimer >= this.flickerInterval) {
                 my.sprite.player.visible = !my.sprite.player.visible; // toggle visibility
                 this.flickerTimer = 0;
             }
-        } else {
+        } else if (!this.alreadyDead) {
             my.sprite.player.visible = true; // make sure it's visible when not invincible
+        }
+
+        if (this.playerHP <= 0 && !this.alreadyDead) {
+            this.alreadyDead = true;
+            this.killSound.play({
+                volume: 0.5
+            });
+            my.vfx.kill.emitParticleAt(
+                my.sprite.player.x,
+                my.sprite.player.y,
+            );
+            my.sprite.player.visible = false;
+            this.time.delayedCall(250, () => {
+                this.scene.pause();
+                this.scene.launch(/*---------------------- DEATH SCENE NAME ---------------------------------*/)
+            });
         }
     }
 
@@ -1049,8 +1127,19 @@ class Level extends Phaser.Scene {
     }
 
     updateScore(num) { //function to update score and change the graphic at the same time
-        score += num;
-        this.scoreText.setText('Score: ' + score);
+        this.score += num;
+        this.scoreText.setText('Score: ' + this.score);
+        if (this.score > high_score) {
+            high_score = this.score;
+        }
+    }
+
+    updateDiamond(num) { //function to update diamond count and change the graphic at the same time
+        this.diamonds += num;
+        this.diamondText.setText('    : ' + this.diamonds + '/3');
+        if (this.diamonds > most_diamonds) {
+            most_diamonds = this.diamonds;
+        }
     }
 
     drawHealthBar() { // updates the health bar in accordance to this.playerHP
