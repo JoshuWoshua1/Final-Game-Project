@@ -1,0 +1,46 @@
+{ "compressionlevel":-1,
+ "height":6,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+            6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+            5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 6, 6,
+            13, 14, 14, 14, 13, 14, 13, 14, 14, 14, 14, 13, 13, 14, 13, 14, 13, 13, 13, 14, 13, 14, 13, 13, 14, 13, 14, 14, 13, 14,
+            21, 22, 21, 22, 21, 22, 21, 22, 21, 22, 21, 22, 22, 22, 22, 22, 22, 22, 21, 22, 21, 22, 21, 22, 21, 22, 21, 22, 21, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22],
+         "height":6,
+         "id":1,
+         "name":"bigBackground",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":30,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":2,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.11.2",
+ "tileheight":24,
+ "tilesets":[
+        {
+         "columns":8,
+         "firstgid":1,
+         "image":"tilemap-backgrounds_packed.png",
+         "imageheight":72,
+         "imagewidth":192,
+         "margin":0,
+         "name":"Background",
+         "spacing":0,
+         "tilecount":24,
+         "tileheight":24,
+         "tilewidth":24
+        }],
+ "tilewidth":24,
+ "type":"map",
+ "version":"1.10",
+ "width":30
+}

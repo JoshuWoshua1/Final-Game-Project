@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="30" height="6" tilewidth="24" tileheight="24" infinite="0" nextlayerid="2" nextobjectid="1">
+ <editorsettings>
+  <export target="Background.tmj" format="json"/>
+ </editorsettings>
+ <tileset firstgid="1" name="Background" tilewidth="24" tileheight="24" tilecount="24" columns="8">
+  <image source="tilemap-backgrounds_packed.png" width="192" height="72"/>
+ </tileset>
+ <layer id="1" name="bigBackground" width="30" height="6">
+  <data encoding="csv">
+6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+5,6,5,6,5,6,5,6,5,6,5,6,5,6,5,6,5,6,5,6,5,6,5,6,5,6,5,6,6,6,
+13,14,14,14,13,14,13,14,14,14,14,13,13,14,13,14,13,13,13,14,13,14,13,13,14,13,14,14,13,14,
+21,22,21,22,21,22,21,22,21,22,21,22,22,22,22,22,22,22,21,22,21,22,21,22,21,22,21,22,21,22,
+22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22
+</data>
+ </layer>
+</map>

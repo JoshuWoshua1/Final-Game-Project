@@ -12,7 +12,7 @@ class Level extends Phaser.Scene {
 
         this.physics.world.gravity.y = 1500; // gravity setup
 
-        this.ZOOM = 2.0;
+        this.ZOOM = 3.0;
 
         this.PARTICLE_VELOCITY = 50;
 
@@ -28,7 +28,7 @@ class Level extends Phaser.Scene {
         // Dash variables
         this.DASH_SPEED = 1000;
         this.DASH_DURATION = 100;
-        this.DASH_COOLDOWN = 500;
+        this.DASH_COOLDOWN = 900;
         this.isDashing = false;
         this.dashTimer = 0;
         this.lastDash = 0;
@@ -47,8 +47,11 @@ class Level extends Phaser.Scene {
 
         this.damage = 1;
         this.playerHP = 10;  // maximum hp of 10
+
         this.invincible = false;
         this.invincibleDuration = 1500;
+        this.flickerTimer = 0;
+        this.flickerInterval = 100;
     }
     preload() {
         this.load.scenePlugin('AnimatedTiles', './lib/AnimatedTiles.js', 'animatedTiles', 'animatedTiles');
@@ -80,6 +83,7 @@ class Level extends Phaser.Scene {
         // -----------------------------------------------------------
 
         // Create tilemap game object & set world bounds to the map size
+        this.Bbackground = this.add.tilemap("Background", 18, 18, 6, 30);
         this.map = this.add.tilemap("CatMap", 18, 18, 130, 40);
         this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
 
@@ -88,8 +92,12 @@ class Level extends Phaser.Scene {
         this.tilesetIND = this.map.addTilesetImage("TilesIND", "tilemap_tilesIND");
         this.tilesetFRM = this.map.addTilesetImage("TilesFRM", "tilemap_tilesFRM");
         this.tilesetEXT = this.map.addTilesetImage("TilesEXT", "tilemap_tilesEXT");
+        this.tilesetBG = this.Bbackground.addTilesetImage("Background", "tilemap_tilesBG");
 
         // Creating layers out of the tilemap in order from back to front.
+        this.BigBG = this.Bbackground.createLayer("bigBackground", [this.tilesetBG], 0, 0);
+        this.BigBG.setScale(5);
+        this.BigBG.setScrollFactor(0.2, 0.1);
         this.Paralax = this.map.createLayer("ParalaxBackground", [this.tileset, this.tilesetIND, this.tilesetFRM], 0, 0);
         this.Background = this.map.createLayer("Background", [this.tileset, this.tilesetIND, this.tilesetFRM], 0, 0);
         this.DecoWalls = this.map.createLayer("Deco&Walls", [this.tileset, this.tilesetIND, this.tilesetFRM], 0, 0);
@@ -229,7 +237,7 @@ class Level extends Phaser.Scene {
         //---------------------------------------------
 
         // Create the player object, and set up collision with the ground
-        my.sprite.player = this.physics.add.sprite(100, 100, "cats", "Cat_1.png"); //MAKE SURE TO CHANGE TO CAT WHEN SPRITE IS CREATED
+        my.sprite.player = this.physics.add.sprite(50, 630, "cats", "Cat_1.png"); //MAKE SURE TO CHANGE TO CAT WHEN SPRITE IS CREATED
         my.sprite.player.setCollideWorldBounds(true);
         this.physics.world.TILE_BIAS = 20;
         this.physics.add.collider(my.sprite.player, this.Ground);
@@ -239,12 +247,16 @@ class Level extends Phaser.Scene {
         my.object.Kibble = this.createObj("Kibble", "spriteSheet_FRM", 104);
         my.object.Spike = this.createObj("Spike", "spriteSheet", 68);
         my.object.Bed = this.createObj("Bed", "spriteSheet", 156);
+        my.object.Hazard = this.map.createFromObjects("Objects", {
+            name: "Hazard"
+        });
 
         // Enable Physics on Objects
         my.object.Sushi.forEach(o => this.physics.add.existing(o, true));
         my.object.Kibble.forEach(o => this.physics.add.existing(o, true));
         my.object.Spike.forEach(o => this.physics.add.existing(o, true));
         my.object.Bed.forEach(o => this.physics.add.existing(o, true));
+        my.object.Hazard.forEach(o => {this.physics.add.existing(o, true); o.setVisible(false);});
         
         // groups for objects
         this.kibbleGroup = this.add.group(my.object.Kibble);
@@ -254,6 +266,7 @@ class Level extends Phaser.Scene {
         this.slashGroup = this.physics.add.group(); //phsyics group to handle attack hitbox
         this.projectiles = this.physics.add.group(); // physics group to handle ranged attack hitbox
         this.enemies = this.physics.add.group(); //group for enemies
+        this.hazardGroup = this.add.group(my.object.Hazard);
 
         //change hitbox for spikes if they are flipped or not
         this.spikeGroup.getChildren().forEach(spike => {
@@ -271,7 +284,7 @@ class Level extends Phaser.Scene {
         });
         
         // Create score text (fixed to camera)
-        this.scoreText = this.add.text(360, 275, 'Score: 0', {
+        this.scoreText = this.add.text(160 * this.ZOOM, 108 * this.ZOOM, 'Score: 0', {
              fontSize: '15px',
              fontFamily: 'Verdana',
              color: '#41f500', 
@@ -286,7 +299,7 @@ class Level extends Phaser.Scene {
         //Create health Bar
         this.healthBarBg = this.add.graphics(); // border of hp bar
         this.healthBarBg.fillStyle(0x000000, 0.6);
-        this.healthBarBg.fillRect(370, 250, 210, 30);
+        this.healthBarBg.fillRect(162* this.ZOOM, 102 * this.ZOOM, 206, 26);
 
         this.healthBar = this.add.graphics(); // actual hp bar
         this.healthBar.fillStyle(0x41f500, 1);
@@ -297,6 +310,10 @@ class Level extends Phaser.Scene {
         this.healthBarBg.setDepth(9997);
 
         this.drawHealthBar(); // initailly call to create health bar
+
+        this.dashCooldownUI = this.add.graphics(); //radial dash timer
+        this.dashCooldownUI.setScrollFactor(0);
+        this.dashCooldownUI.setDepth(9996);
         
         // + animations for those objects
         //
@@ -508,9 +525,9 @@ class Level extends Phaser.Scene {
             });
 
             this.playerHP -= 1;
-            //this.drawHealthBar();
             this.flickerHealth();
             my.sprite.player.setVelocityY(-450);
+            // Invincibility frames
             this.time.delayedCall(this.invincibleDuration, () => {
                 this.invincible = false;
             });
@@ -524,17 +541,25 @@ class Level extends Phaser.Scene {
             });
 
             this.playerHP -= 1;
-            //this.drawHealthBar();
             this.flickerHealth();
-            this.knockedBack = true;
-            const knockbackSpeed = 350;
-            const knockbackDirection = player.x < enemy.x ? -1 : 1;
 
-            player.setVelocityX(knockbackSpeed * knockbackDirection);
-            player.setVelocityY(-30);
-            this.time.delayedCall(300, () => {
-                this.knockedBack = false;
+            // Invincibility frames
+            this.time.delayedCall(this.invincibleDuration, () => {
+                this.invincible = false;
             });
+        });
+
+        this.physics.add.overlap(my.sprite.player, this.hazardGroup, (player, hazard) => {
+            if (this.invincible) return;
+            this.invincible = true;
+            this.hitSound.play({
+                volume: 0.4
+            });
+
+            this.playerHP -= 1;
+            this.flickerHealth();
+
+            // Invincibility frames
             this.time.delayedCall(this.invincibleDuration, () => {
                 this.invincible = false;
             });
@@ -698,7 +723,7 @@ class Level extends Phaser.Scene {
         }
 
         // Maximum speed limiters for falling and movement
-        if (Math.abs(my.sprite.player.body.velocity.x) > this.MAX_SPEED && !this.wallJump && !this.isDashing && !this.knockedBack) { // X-axis limiter
+        if (Math.abs(my.sprite.player.body.velocity.x) > this.MAX_SPEED && !this.wallJump && !this.isDashing) { // X-axis limiter
             my.sprite.player.body.velocity.x = Phaser.Math.Clamp(my.sprite.player.body.velocity.x, -this.MAX_SPEED, this.MAX_SPEED);
         }
         if (Math.abs(my.sprite.player.body.velocity.y) > this.MAX_FALL_SPEED) { // Y-axis limiter
@@ -899,6 +924,11 @@ class Level extends Phaser.Scene {
             }
         }
 
+        // dash cooldown UI element
+        const timeSinceDash = this.time.now - this.lastDash;
+        const cooldownRatio = Phaser.Math.Clamp(timeSinceDash / this.DASH_COOLDOWN, 0, 1);
+        this.drawDashUI(1 - cooldownRatio);
+
         this.enemies.getChildren().forEach(enemy => {
             const target = enemy.patrol.points[enemy.patrol.current];
             const direction = target.x > enemy.x ? 1 : -1;
@@ -915,6 +945,18 @@ class Level extends Phaser.Scene {
                 enemy.updateDirection();
             }
         });
+
+        //sprite flicker when i-frames are active
+        if (this.invincible) {
+            this.flickerTimer += this.game.loop.delta;
+
+            if (this.flickerTimer >= this.flickerInterval) {
+                my.sprite.player.visible = !my.sprite.player.visible; // toggle visibility
+                this.flickerTimer = 0;
+            }
+        } else {
+            my.sprite.player.visible = true; // make sure it's visible when not invincible
+        }
     }
 
     // function to create objects intended to reduce clutter in create()
@@ -976,24 +1018,41 @@ class Level extends Phaser.Scene {
         const hpRatio = Phaser.Math.Clamp(this.playerHP / maxHP, 0, 1);
 
         this.healthBar.fillStyle(0x00ff00);
-        this.healthBar.fillRect(375, 255, barWidth * hpRatio, barHeight);
+        this.healthBar.fillRect(163* this.ZOOM, 103 * this.ZOOM, barWidth * hpRatio, barHeight);
     }
 
-    flickerHealth() {
+    flickerHealth() { //flicker hp bar red and green
         this.healthBar.clear();
         this.healthBar.fillStyle(0xff0000);
-        this.healthBar.fillRect(375, 255, (this.playerHP / 10) * 200, 20);
+        this.healthBar.fillRect(163* this.ZOOM, 103 * this.ZOOM, (this.playerHP / 10) * 200, 20);
 
         this.time.delayedCall(50, () => {
             this.drawHealthBar();
             this.time.delayedCall(50, () => {
                 this.healthBar.clear();
                 this.healthBar.fillStyle(0xff0000);
-                this.healthBar.fillRect(375, 255, (this.playerHP / 10) * 200, 20);
+                this.healthBar.fillRect(163* this.ZOOM, 103 * this.ZOOM, (this.playerHP / 10) * 200, 20);
                 this.time.delayedCall(50, () => {
                     this.drawHealthBar();
                 });
             });
-    });
-}
+        });
+    }
+
+    drawDashUI(cooldownRatio) { // draws the radial dash cooldown
+        const centerX = 226 * this.ZOOM;
+        const centerY = 116 * this.ZOOM;
+        const radius = 10;
+
+        this.dashCooldownUI.clear();
+
+        if (cooldownRatio < 1) {
+            this.dashCooldownUI.fillStyle(0x000000, 0.5);  // background circle
+            this.dashCooldownUI.fillCircle(centerX, centerY, radius+2);
+
+            this.dashCooldownUI.fillStyle(0x11aaaa, 1);  // pie color
+            this.dashCooldownUI.slice(centerX, centerY, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - cooldownRatio), false);
+            this.dashCooldownUI.fillPath();
+        }
+    }
 }
