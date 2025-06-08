@@ -46,7 +46,7 @@ class Level extends Phaser.Scene {
         this.lastSpitTime = 0;
 
         this.damage = 1;
-        this.playerHP = 1;
+        this.playerHP = 5;
         this.invincible = false;
         this.invincibleDuration = 1500;
     }
@@ -467,8 +467,9 @@ class Level extends Phaser.Scene {
             this.invincible = true;
 
             this.playerHP -= 1;
-            this.drawHealthBar();
-            my.sprite.player.setVelocityY(-450)
+            //this.drawHealthBar();
+            this.flickerHealth();
+            my.sprite.player.setVelocityY(-450);
             this.time.delayedCall(this.invincibleDuration, () => {
                 this.invincible = false;
             });
@@ -479,7 +480,8 @@ class Level extends Phaser.Scene {
             this.invincible = true;
 
             this.playerHP -= 1;
-            this.drawHealthBar();
+            //this.drawHealthBar();
+            this.flickerHealth();
             this.knockedBack = true;
             const knockbackSpeed = 350;
             const knockbackDirection = player.x < enemy.x ? -1 : 1;
@@ -918,5 +920,21 @@ class Level extends Phaser.Scene {
         this.healthBar.fillRect(375, 255, barWidth * hpRatio, barHeight);
     }
 
-    
+    flickerHealth() {
+        this.healthBar.clear();
+        this.healthBar.fillStyle(0xff0000);
+        this.healthBar.fillRect(375, 255, (this.playerHP / 10) * 200, 20);
+
+        this.time.delayedCall(50, () => {
+            this.drawHealthBar();
+            this.time.delayedCall(50, () => {
+                this.healthBar.clear();
+                this.healthBar.fillStyle(0xff0000);
+                this.healthBar.fillRect(375, 255, (this.playerHP / 10) * 200, 20);
+                this.time.delayedCall(50, () => {
+                    this.drawHealthBar();
+                });
+            });
+    });
+}
 }
