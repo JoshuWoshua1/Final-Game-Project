@@ -46,7 +46,7 @@ class Level extends Phaser.Scene {
         this.lastSpitTime = 0;
 
         this.damage = 1;
-        this.playerHP = 5;
+        this.playerHP = 10;  // maximum hp of 10
         this.invincible = false;
         this.invincibleDuration = 1500;
     }
@@ -64,6 +64,19 @@ class Level extends Phaser.Scene {
 
         // load audio here
         this.clangSound = this.sound.add("clang");
+        this.eatSound = this.sound.add("eat");
+        this.hitSound = this.sound.add("hit");
+        this.healSound = this.sound.add("heal");
+        this.powerUpSound = this.sound.add("powerUp");
+        this.killSound = this.sound.add("kill");
+        this.music = this.sound.add("song", {
+            loop: true,
+            volume: 0.3
+        });
+        this.music.play(); // creates and starts background music.
+        this.dashSound = this.sound.add("dash");
+        this.jumpSound = this.sound.add("jump");
+        this.slashSound = this.sound.add("slash");
         // -----------------------------------------------------------
 
         // Create tilemap game object & set world bounds to the map size
@@ -206,6 +219,13 @@ class Level extends Phaser.Scene {
             alpha: { start: 1, end: 0 },
         }); my.vfx.poof.stop();
 
+        my.vfx.dash = this.add.particles(0, 0, "kenny-particles", {
+            frame: ['spark_07.png'],
+            scale: {start: 0.15, end: 0.05},
+            lifespan: 200,
+            alpha: {start: 0.4, end: 0}, 
+        }); my.vfx.dash.stop();
+
         //---------------------------------------------
 
         // Create the player object, and set up collision with the ground
@@ -251,7 +271,7 @@ class Level extends Phaser.Scene {
         });
         
         // Create score text (fixed to camera)
-        this.scoreText = this.add.text(350, 575, 'Score: 0', {
+        this.scoreText = this.add.text(360, 275, 'Score: 0', {
              fontSize: '15px',
              fontFamily: 'Verdana',
              color: '#41f500', 
@@ -277,7 +297,7 @@ class Level extends Phaser.Scene {
         this.healthBarBg.setDepth(9997);
 
         this.drawHealthBar(); // initailly call to create health bar
-         
+        
         // + animations for those objects
         //
         // -----------------------------------------------------------
@@ -345,12 +365,18 @@ class Level extends Phaser.Scene {
         
         this.physics.add.overlap(my.sprite.player, this.sushiGroup, (obj1, obj2) => {
             obj2.destroy(); 
+            this.eatSound.play({
+                volume: 0.4
+            });
 
             // vfx for collecting powerup  
             my.vfx.powerUpCollect.start()
             my.vfx.powerUpCollect.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
             my.vfx.powerUpCollect.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
             this.time.delayedCall(100, () => {
+                this.powerUpSound.play({
+                    volume: 0.4
+                });
                 my.vfx.powerUpCollect.stop();
             });
 
@@ -366,6 +392,9 @@ class Level extends Phaser.Scene {
         // collision handling or Kibble coin
         this.physics.add.overlap(my.sprite.player, this.kibbleGroup, (obj1, obj2) => {
             obj2.destroy(); 
+            this.eatSound.play({
+                volume: 0.25
+            });
 
             my.vfx.kibble.start()
             my.vfx.kibble.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
@@ -382,6 +411,9 @@ class Level extends Phaser.Scene {
             if (!this.lastBedHeal || this.time.now - this.lastBedHeal > 5000) {
                 this.lastBedHeal = this.time.now;
                 this.healing = true;
+                this.healSound.play({
+                    volume: 0.4
+                });
                 player.anims.play('idle', true);
                 this.playerHP = 10;
                 this.drawHealthBar();
@@ -410,6 +442,9 @@ class Level extends Phaser.Scene {
 
         this.physics.add.overlap(this.slashGroup, this.enemies, (slash, enemy) => { // attacking enemy with slash
             enemy.enemyHp -= this.damage;
+            this.hitSound.play({
+                volume: 0.4
+            });
             my.vfx.poof.emitParticleAt(
                 (slash.x + enemy.x) / 2,
                 (slash.y + enemy.y) / 2,
@@ -423,22 +458,28 @@ class Level extends Phaser.Scene {
                     enemy.x,
                     enemy.y,
                 );
+                this.killSound.play({
+                    volume: 0.4
+                });
                 enemy.destroy();
                 this.updateScore(200);
             }
-            this.clangSound.play({
-                volume: 0.4
-            });
         });
 
         this.physics.add.overlap(this.projectiles, this.enemies, (proj, enemy) => { // attacking enemy with projectile
             enemy.enemyHp -= this.damage;
+            this.hitSound.play({
+                volume: 0.4
+            });
             my.vfx.poof.emitParticleAt(
                 proj.x,
                 proj.y,
             );
             proj.destroy();
             if (enemy.enemyHp <= 0) {
+                this.killSound.play({
+                    volume: 0.4
+                });
                 my.vfx.kill.emitParticleAt(
                     enemy.x,
                     enemy.y,
@@ -446,9 +487,6 @@ class Level extends Phaser.Scene {
                 enemy.destroy();
                 this.updateScore(200);
             }
-            this.clangSound.play({
-                volume: 0.4
-            });
         });
 
         this.physics.add.collider(this.slashGroup, this.spikeGroup, (spike, slash) => { // pogoing off of a spike with slash
@@ -465,6 +503,9 @@ class Level extends Phaser.Scene {
         this.physics.add.collider(my.sprite.player, this.spikeGroup, (player, spike) => { // player hitting spike
             if (this.invincible) return;  // Skip if invincible
             this.invincible = true;
+            this.hitSound.play({
+                volume: 0.4
+            });
 
             this.playerHP -= 1;
             //this.drawHealthBar();
@@ -478,6 +519,9 @@ class Level extends Phaser.Scene {
         this.physics.add.collider(my.sprite.player, this.enemies, (player, enemy) => { // player colliding with enemy
             if (this.invincible) return;  // Skip if invincible
             this.invincible = true;
+            this.hitSound.play({
+                volume: 0.4
+            });
 
             this.playerHP -= 1;
             //this.drawHealthBar();
@@ -628,6 +672,10 @@ class Level extends Phaser.Scene {
                 my.sprite.player.x,
                 my.sprite.player.y + my.sprite.player.displayHeight / 2  // emit below feet
             );
+            // jumping sound fx
+            this.jumpSound.play({
+                volume: 0.2
+            });
         }
 
         if (!onWall) {  // If not on wall walljump is false
@@ -690,6 +738,9 @@ class Level extends Phaser.Scene {
             let offsetY = 0;
 
             my.sprite.player.anims.play('attack', true); //play attack animation on player
+            this.slashSound.play({ // play attack sound
+                volume: 0.2
+            });
 
              if (this.wKey.isDown) {
                 offsetY = -20;
@@ -811,11 +862,19 @@ class Level extends Phaser.Scene {
             this.lastDash = dash_now;
 
             //audio
-            //
+            this.dashSound.play({
+                volume: 0.4
+            });
             //-----
 
             //vfx
-            //
+            my.vfx.dash.startFollow(
+                my.sprite.player,
+                my.sprite.player.displayWidth / 2 * -1, // offset to appear behind
+                0,
+                false
+            );
+            my.vfx.dash.start();
             //------
 
             // Disable gravity
@@ -835,7 +894,7 @@ class Level extends Phaser.Scene {
                 this.isDashing = false;
                 my.sprite.player.body.allowGravity = true;
                 //vfx stop
-                //
+                my.vfx.dash.stop();
                 //-----
             }
         }

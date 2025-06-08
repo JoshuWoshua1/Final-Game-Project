@@ -38,7 +38,16 @@ class Load extends Phaser.Scene {
         });
 
         // Load Sound
-        this.load.audio("clang", "sounds/metal_pot_jingle.wav");
+        this.load.audio("clang", "sounds/pogo.wav");
+        this.load.audio("eat", "sounds/catNom.wav");
+        this.load.audio("hit", "sounds/hitHurt.wav");
+        this.load.audio("powerUp", "sounds/powerUp.wav");
+        this.load.audio("heal", "sounds/heal.wav");
+        this.load.audio("kill", "sounds/explosion.wav");
+        this.load.audio("song", "sounds/ngini-ija-18489.wav")
+        this.load.audio("jump", "sounds/jump.wav")
+        this.load.audio("dash", "sounds/dash.wav")
+        this.load.audio("slash", "sounds/swing.wav")
     }
 
     create() {
