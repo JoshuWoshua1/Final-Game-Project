@@ -46,12 +46,14 @@ class Level extends Phaser.Scene {
         this.lastSpitTime = 0;
 
         this.damage = 1;
-        this.playerHP = 10;  // maximum hp of 10
+        this.playerHP = 5;  // maximum hp of 5
 
         this.invincible = false;
         this.invincibleDuration = 1500;
         this.flickerTimer = 0;
         this.flickerInterval = 100;
+
+        this.diamonds = 0;
     }
     preload() {
         this.load.scenePlugin('AnimatedTiles', './lib/AnimatedTiles.js', 'animatedTiles', 'animatedTiles');
@@ -80,6 +82,8 @@ class Level extends Phaser.Scene {
         this.dashSound = this.sound.add("dash");
         this.jumpSound = this.sound.add("jump");
         this.slashSound = this.sound.add("slash");
+        this.spitSound = this.sound.add("spit");
+        this.diamondSound = this.sound.add("diamond");
         // -----------------------------------------------------------
 
         // Create tilemap game object & set world bounds to the map size
@@ -207,6 +211,19 @@ class Level extends Phaser.Scene {
             rotate: { min: -180, max: 180 }
         }); my.vfx.kibble.stop();
 
+        my.vfx.diamond = this.add.particles(0,0, "spriteSheet", {
+            frame: 67,
+            random: true,
+            scale: { start: 0.6, end: 0.4 },
+            lifespan: 300,
+            alpha: { start: 1, end: 0 },
+            speed: { min: 100, max: 200 },
+            angle: { min: 0, max: 360 },
+            gravityY: 300,
+            quantity: 2,
+            rotate: { min: -180, max: 180 }
+        }); my.vfx.diamond.stop();
+
         my.vfx.kill = this.add.particles(0, 0, "kenny-particles", {
             frame: ['smoke_01.png', 'smoke_02.png', 'smoke_03.png'],
             random: true,
@@ -250,6 +267,7 @@ class Level extends Phaser.Scene {
         my.object.Hazard = this.map.createFromObjects("Objects", {
             name: "Hazard"
         });
+        my.object.Diamond = this.createObj("Diamond", "spriteSheet", 67);
 
         // Enable Physics on Objects
         my.object.Sushi.forEach(o => this.physics.add.existing(o, true));
@@ -257,6 +275,7 @@ class Level extends Phaser.Scene {
         my.object.Spike.forEach(o => this.physics.add.existing(o, true));
         my.object.Bed.forEach(o => this.physics.add.existing(o, true));
         my.object.Hazard.forEach(o => {this.physics.add.existing(o, true); o.setVisible(false);});
+        my.object.Diamond.forEach(o => {this.physics.add.existing(o, true);});
         
         // groups for objects
         this.kibbleGroup = this.add.group(my.object.Kibble);
@@ -267,6 +286,7 @@ class Level extends Phaser.Scene {
         this.projectiles = this.physics.add.group(); // physics group to handle ranged attack hitbox
         this.enemies = this.physics.add.group(); //group for enemies
         this.hazardGroup = this.add.group(my.object.Hazard);
+        this.diamondGroup = this.add.group(my.object.Diamond);
 
         //change hitbox for spikes if they are flipped or not
         this.spikeGroup.getChildren().forEach(spike => {
@@ -284,14 +304,15 @@ class Level extends Phaser.Scene {
         });
         
         // Create score text (fixed to camera)
-        this.scoreText = this.add.text(160 * this.ZOOM, 108 * this.ZOOM, 'Score: 0', {
-             fontSize: '15px',
+        this.scoreText = this.add.text(162 * this.ZOOM, 110 * this.ZOOM, 'Score: 0', {
+             fontSize: '72px',
              fontFamily: 'Verdana',
              color: '#41f500', 
              stroke: '#000000',
-             strokeThickness: 6,
+             strokeThickness: 10,
              padding: { x: 10, y: 5 },
         });
+        this.scoreText.setScale(0.2);
         // This makes the text stay in the same position on screen regardless of camera movement
         this.scoreText.setScrollFactor(0);
         this.scoreText.setDepth(9999); // Ensure it's always on top
@@ -336,15 +357,16 @@ class Level extends Phaser.Scene {
                 enemy.anims.play('walkOrange', true);
                 enemy.enemyHp = 4;
                 enemy.speed = 50;
+                enemy.points = 200;
             } else if (enemyColor === "black") {
                 enemy = this.physics.add.sprite(enemyObj.x+10, enemyObj.y-10, "cats", "Cat_8.png");
                 enemy.anims.play('walkBlack', true);
                 enemy.enemyHp = 8;
                 enemy.speed = 35;
+                enemy.points = 400;
             }
             enemy.setCollideWorldBounds(true);
             this.physics.add.collider(enemy, this.Ground);
-
 
             // Get matching path points
             const matchedPoints = pathPoints.filter(p => {
@@ -424,6 +446,25 @@ class Level extends Phaser.Scene {
             this.updateScore(10);
         });
 
+        this.physics.add.overlap(my.sprite.player, this.diamondGroup, (obj1, obj2) => { // collecting diamonds
+            obj2.destroy(); 
+            this.diamondSound.play({
+                volume: 0.25
+            });
+
+            my.vfx.diamond.start()
+            my.vfx.diamond.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
+            my.vfx.diamond.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
+            this.time.delayedCall(100, () => {
+                my.vfx.diamond.stop();
+            }); 
+            
+            // add to score
+            this.updateScore(500);
+            // update total diamond count
+            this.diamonds += 1;
+        });
+
         this.physics.add.overlap(my.sprite.player, this.bedGroup, (player, bed) => { // heal player and stop movement for a second when in bed
             if (!this.lastBedHeal || this.time.now - this.lastBedHeal > 5000) {
                 this.lastBedHeal = this.time.now;
@@ -432,7 +473,7 @@ class Level extends Phaser.Scene {
                     volume: 0.4
                 });
                 player.anims.play('idle', true);
-                this.playerHP = 10;
+                this.playerHP = 5;
                 this.drawHealthBar();
                 player.x = bed.x;
                 player.y = bed.y-10;
@@ -478,8 +519,8 @@ class Level extends Phaser.Scene {
                 this.killSound.play({
                     volume: 0.4
                 });
+                this.updateScore(enemy.points);
                 enemy.destroy();
-                this.updateScore(200);
             }
         });
 
@@ -501,8 +542,8 @@ class Level extends Phaser.Scene {
                     enemy.x,
                     enemy.y,
                 );
+                this.updateScore(enemy.points);
                 enemy.destroy();
-                this.updateScore(200);
             }
         });
 
@@ -841,6 +882,9 @@ class Level extends Phaser.Scene {
         const spit_now = this.time.now;
         if (Phaser.Input.Keyboard.JustDown(this.kKey) && spit_now - this.lastSpitTime > this.SPIT_COOLDOWN) {
             this.lastSpitTime = spit_now;
+            this.spitSound.play({
+                volume: 0.2
+            });
             let velocityX = 0;
             let velocityY = 0;
             let offsetX = 0;
@@ -1012,7 +1056,7 @@ class Level extends Phaser.Scene {
     drawHealthBar() { // updates the health bar in accordance to this.playerHP
         this.healthBar.clear();
 
-        const maxHP = 10;
+        const maxHP = 5;
         const barWidth = 200;
         const barHeight = 20;
         const hpRatio = Phaser.Math.Clamp(this.playerHP / maxHP, 0, 1);
@@ -1024,14 +1068,14 @@ class Level extends Phaser.Scene {
     flickerHealth() { //flicker hp bar red and green
         this.healthBar.clear();
         this.healthBar.fillStyle(0xff0000);
-        this.healthBar.fillRect(163* this.ZOOM, 103 * this.ZOOM, (this.playerHP / 10) * 200, 20);
+        this.healthBar.fillRect(163* this.ZOOM, 103 * this.ZOOM, (this.playerHP / 5) * 200, 20);
 
         this.time.delayedCall(50, () => {
             this.drawHealthBar();
             this.time.delayedCall(50, () => {
                 this.healthBar.clear();
                 this.healthBar.fillStyle(0xff0000);
-                this.healthBar.fillRect(163* this.ZOOM, 103 * this.ZOOM, (this.playerHP / 10) * 200, 20);
+                this.healthBar.fillRect(163* this.ZOOM, 103 * this.ZOOM, (this.playerHP / 5) * 200, 20);
                 this.time.delayedCall(50, () => {
                     this.drawHealthBar();
                 });
