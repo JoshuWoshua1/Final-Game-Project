@@ -19,7 +19,7 @@ class DeathScene extends Phaser.Scene {
             boxHeight,
             0x87ceeb,
             0.6
-        );
+        ); 
         background.setOrigin(0.5);
 
         // Outline rectangle

@@ -40,6 +40,7 @@ class MainMenu extends Phaser.Scene {
 
         const centerX = this.sys.game.config.width / 2;
         const centerY = this.sys.game.config.height / 2;
+        
 
         // Title Text
         this.titleText = this.add.text(centerX, centerY - 150, 'CITTY KAT', {
