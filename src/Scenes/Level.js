@@ -28,7 +28,7 @@ class Level extends Phaser.Scene {
         this.lastDash = 0;
         this.dashUnlock = true;
 
-        // double jump varialbes used in current jumping logic, be careful removing this if you dont want it
+        // double jump varialbes used in current jumping logic
         this.jumpCount = 0;
         this.MAX_JUMPS = 1;
 
@@ -73,7 +73,6 @@ class Level extends Phaser.Scene {
         this.slashSound = this.sound.add("slash");
         this.spitSound = this.sound.add("spit");
         this.diamondSound = this.sound.add("diamond");
-        // -----------------------------------------------------------
 
         // Create tilemap game object & set world bounds to the map size
         this.Bbackground = this.add.tilemap("Background", 18, 18, 6, 30);
@@ -90,7 +89,7 @@ class Level extends Phaser.Scene {
         // Creating layers out of the tilemap in order from back to front.
         this.BigBG = this.Bbackground.createLayer("bigBackground", [this.tilesetBG], 0, 0);
         this.BigBG.setScale(5);
-        this.BigBG.setScrollFactor(0.2, 0.1);
+        this.BigBG.setScrollFactor(0.2, 0.1); //set paralax scrolling
         this.Paralax = this.map.createLayer("ParalaxBackground", [this.tileset, this.tilesetIND, this.tilesetFRM, this.tilesetEXT], 0, 0);
         this.darkOverlay = this.add.rectangle(
             0, 0,
@@ -251,7 +250,7 @@ class Level extends Phaser.Scene {
         //---------------------------------------------
 
         // Create the player object, and set up collision with the ground
-        my.sprite.player = this.physics.add.sprite(50, 630, "cats", "Cat_1.png"); //MAKE SURE TO CHANGE TO CAT WHEN SPRITE IS CREATED
+        my.sprite.player = this.physics.add.sprite(50, 630, "cats", "Cat_1.png");
         my.sprite.player.setCollideWorldBounds(true);
         this.physics.world.TILE_BIAS = 20;
         this.physics.add.collider(my.sprite.player, this.Ground);
@@ -274,7 +273,7 @@ class Level extends Phaser.Scene {
         my.object.Kibble.forEach(o => this.physics.add.existing(o, true));
         my.object.Spike.forEach(o => this.physics.add.existing(o, true));
         my.object.Bed.forEach(o => this.physics.add.existing(o, true));
-        my.object.Hazard.forEach(o => {this.physics.add.existing(o, true); o.setVisible(false);});
+        my.object.Hazard.forEach(o => {this.physics.add.existing(o, true); o.setVisible(false);}); //creates invisible hitboxes for miscelanious hazards
         my.object.Diamond.forEach(o => {this.physics.add.existing(o, true);});
         my.object.Button.forEach(o => {
             this.physics.add.existing(o, true);
@@ -379,13 +378,13 @@ class Level extends Phaser.Scene {
             
             let enemy;
 
-            if (enemyColor === "orange") {
+            if (enemyColor === "orange") {  // if orange cat do this
                 enemy = this.physics.add.sprite(enemyObj.x+10, enemyObj.y-10, "cats", "Cat_6.png");
                 enemy.anims.play('walkOrange', true);
                 enemy.enemyHp = 4;
                 enemy.speed = 50;
                 enemy.points = 200;
-            } else if (enemyColor === "black") {
+            } else if (enemyColor === "black") { // if black cat do this
                 enemy = this.physics.add.sprite(enemyObj.x+10, enemyObj.y-10, "cats", "Cat_8.png");
                 enemy.anims.play('walkBlack', true);
                 enemy.enemyHp = 8;
@@ -427,7 +426,6 @@ class Level extends Phaser.Scene {
 
         
         // player collisions with objects / obstacles go here
-        
         this.physics.add.collider(my.sprite.player, this.lockGroup); // collision with locks
 
         // collision handling for Sushi powerup
@@ -457,8 +455,7 @@ class Level extends Phaser.Scene {
             this.updateScore(100);
         });
 
-        // collision handling or Kibble coin
-        this.physics.add.overlap(my.sprite.player, this.kibbleGroup, (obj1, obj2) => {
+        this.physics.add.overlap(my.sprite.player, this.kibbleGroup, (obj1, obj2) => { // collision handling for Kibble
             obj2.destroy(); 
             this.eatSound.play({
                 volume: 0.22
@@ -661,7 +658,7 @@ class Level extends Phaser.Scene {
             });
         });
 
-        this.physics.add.overlap(my.sprite.player, this.hazardGroup, (player, hazard) => {
+        this.physics.add.overlap(my.sprite.player, this.hazardGroup, (player, hazard) => { // player colliding with any hazard object
             if (this.invincible) return;
             this.invincible = true;
             this.hitSound.play({
@@ -676,7 +673,6 @@ class Level extends Phaser.Scene {
                 this.invincible = false;
             });
         });
-        // -----------------------------------------------------------
 
         // setup for keyboard inputs
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -704,7 +700,7 @@ class Level extends Phaser.Scene {
         const onGround = my.sprite.player.body.blocked.down
         const onRoof = my.sprite.player.body.blocked.up
 
-        if (!this.healing) {
+        if (!this.healing) { // turns movement keys off while sitting in bed
             if (this.aKey.isDown) {
                 my.sprite.player.setAccelerationX(-this.ACCELERATION);
                 my.sprite.player.setFlip(true, false);
@@ -933,7 +929,7 @@ class Level extends Phaser.Scene {
             
         }
 
-        // allows slash to move with player for better game feel
+        // allows slash hitbox to move with player for better game feel
         if (this.activeSlash) {
             this.activeSlash.setPosition(
                 my.sprite.player.x + this.activeSlash.offsetX,
@@ -968,7 +964,7 @@ class Level extends Phaser.Scene {
                 offsetX = my.sprite.player.flipX ? -20 : 20;
             }
 
-            let projectile = this.projectiles.create(
+            let projectile = this.projectiles.create( // create spit projectile
                 my.sprite.player.x + offsetX,
                 my.sprite.player.y + offsetY,
                 'spriteSheet',
@@ -997,7 +993,6 @@ class Level extends Phaser.Scene {
             this.dashSound.play({
                 volume: 0.4
             });
-            //-----
 
             //vfx
             my.vfx.dash.startFollow(
@@ -1007,7 +1002,6 @@ class Level extends Phaser.Scene {
                 false
             );
             my.vfx.dash.start();
-            //------
 
             // Disable gravity
             my.sprite.player.body.allowGravity = false;
@@ -1027,7 +1021,6 @@ class Level extends Phaser.Scene {
                 my.sprite.player.body.allowGravity = true;
                 //vfx stop
                 my.vfx.dash.stop();
-                //-----
             }
         }
 
@@ -1065,8 +1058,8 @@ class Level extends Phaser.Scene {
             my.sprite.player.visible = true; // make sure it's visible when not invincible
         }
 
-        if (this.playerHP <= 0 && !this.alreadyDead) {
-            this.alreadyDead = true
+        if (this.playerHP <= 0 && !this.alreadyDead) { // kills the player once upon reaching 0 hp
+            this.alreadyDead = true //added this so vfx and death sound dont spam while at 0 hp
             this.killSound.play({
                 volume: 0.5
             });
@@ -1077,7 +1070,7 @@ class Level extends Phaser.Scene {
             my.sprite.player.visible = false;;
         }
 
-        if (this.playerHP <= 0) {
+        if (this.playerHP <= 0) { // calls for game end upon hitting 0 hp
             this.time.delayedCall(250, () => {
                 this.scene.pause();
                 this.music.stop();

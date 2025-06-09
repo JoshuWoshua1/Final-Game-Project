@@ -54,7 +54,7 @@ class Load extends Phaser.Scene {
         this.load.audio("spit", "sounds/spit.wav");
         this.load.audio("diamond", "sounds/diamond.wav");
 
-        // load UI 
+        // load UI elements
         this.load.image("aKey", "UI/akey.png");                    
         this.load.image("dKey", "UI/dkey.png");                    
         this.load.image("wKey", "UI/wkey.png");                    
@@ -64,13 +64,9 @@ class Load extends Phaser.Scene {
         this.load.image("shift1", "UI/shift1.png");                    
         this.load.image("shift2", "UI/shift2.png");                    
         this.load.image("spaceKey", "UI/space.png");                    
-                     
-
-        
     }
 
     create() {
-
         // walk cycle for player cat
         this.anims.create({
             key: 'walk',

@@ -41,7 +41,6 @@ class MainMenu extends Phaser.Scene {
         const centerX = this.sys.game.config.width / 2;
         const centerY = this.sys.game.config.height / 2;
         
-
         // Title Text
         this.titleText = this.add.text(centerX, centerY - 150, 'CITTY KAT', {
             fontSize: '175px',
@@ -70,28 +69,28 @@ class MainMenu extends Phaser.Scene {
             color: '#ffffff',
             padding: { x: 20, y: 10 },
         }).setOrigin(0.5)
-          .setInteractive({ useHandCursor: true })
-          .on('pointerover', () => startButton.setScale(1.1))
-          .on('pointerout', () => startButton.setScale(1))
-          .on('pointerdown', () => {
-            this.music.stop();
-            this.scene.start('levelScene'); // Replace with your actual game scene key
-          });
+            .setInteractive({ useHandCursor: true })
+            .on('pointerover', () => startButton.setScale(1.1))
+            .on('pointerout', () => startButton.setScale(1))
+            .on('pointerdown', () => {
+                this.music.stop();
+                this.scene.start('levelScene');
+            });
 
-          // HOW TO Button
+        // Controls Button
         const controls = this.add.text(centerX, centerY + 75, 'HOW TO PLAY', {
             fontSize: '32px',
             backgroundColor: '#333333',
             color: '#ffffff',
             padding: { x: 20, y: 10 },
         }).setOrigin(0.5)
-          .setInteractive({ useHandCursor: true })
-          .on('pointerover', () => controls.setScale(1.1))
-          .on('pointerout', () => controls.setScale(1))
-          .on('pointerdown', () => {
-            this.music.stop();
-            this.scene.start('controlScene'); // Replace with your actual game scene key
-          });
+            .setInteractive({ useHandCursor: true })
+            .on('pointerover', () => controls.setScale(1.1))
+            .on('pointerout', () => controls.setScale(1))
+            .on('pointerdown', () => {
+                this.music.stop();
+                this.scene.start('controlScene');
+            });
 
         // Highscore Display
         const highscore = this.add.text(centerX, centerY + 150, 'HIGHSCORE: ' + window.high_score, {
@@ -119,13 +118,13 @@ class MainMenu extends Phaser.Scene {
             color: '#ffffff',
             padding: { x: 20, y: 10 },
         }).setOrigin(0.5)
-          .setInteractive({ useHandCursor: true })
-          .on('pointerover', () => creditsButton.setScale(1.1))
-          .on('pointerout', () => creditsButton.setScale(1))
-          .on('pointerdown', () => {
-            this.music.stop();
-            this.scene.start('creditsScene'); // Replace with your actual game scene key
-        });
+            .setInteractive({ useHandCursor: true })
+            .on('pointerover', () => creditsButton.setScale(1.1))
+            .on('pointerout', () => creditsButton.setScale(1))
+            .on('pointerdown', () => {
+                this.music.stop();
+                this.scene.start('creditsScene');
+            });
 
     }
 }

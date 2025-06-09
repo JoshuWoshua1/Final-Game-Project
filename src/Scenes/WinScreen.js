@@ -37,21 +37,21 @@ class WinScene extends Phaser.Scene {
 
         // Add "You Died!" text
         const winText = this.add.text(centerX, centerY - 120, 'You Won!', {
-        fontSize: '100px',
-        fontFamily: 'Arial',
-        color: '#2efc00', 
-        fontStyle: 'bold',
-        stroke: '#000000',
-        strokeThickness: 4,
-        shadow: {
-            offsetX: 2,
-            offsetY: 2,
-            color: '#000000',
-            blur: 4,
-            stroke: true,
-            fill: true
-        }
-    }).setOrigin(0.5);
+            fontSize: '100px',
+            fontFamily: 'Arial',
+            color: '#2efc00', 
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 4,
+            shadow: {
+                offsetX: 2,
+                offsetY: 2,
+                color: '#000000',
+                blur: 4,
+                stroke: true,
+                fill: true
+            }
+        }).setOrigin(0.5);
 
         const buttonStyle = {
             fontSize: '32px',

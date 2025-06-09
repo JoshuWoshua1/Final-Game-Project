@@ -43,13 +43,13 @@ class CreditsScene extends Phaser.Scene {
             centerX,
             centerY,
             screenWidth * 0.9,  // 90% of screen width
-            screenHeight * 0.6, // 80% of screen height
+            screenHeight * 0.6, // 60% of screen height
             0x000000,
             0.8
         ).setOrigin(0.5, 0.8);
 
         bgRect.setDepth(0);
-        this.add.text( 700, 185, "Kitty Cat\n\nTilemaps by: Kenney\nCustom sprites by: Joshua Kim-Pearson\nCode by: Joshua Kim-Pearson, Brody Vance, & Miga Miga Damdinbazar\nMusic by: Ngini Ija by 33nano\nSound effects by: Joshua Kim-Pearson using jsfxr\n\nThis game was created as a final project for CMPM120\nat UCSC during spring 2025", {
+        this.add.text( 700, 185, "Kitty Cat\n\nTilemaps by: Kenney\nCustom sprites by: Joshua Kim-Pearson\nCode by: Joshua Kim-Pearson, Brody Vance, & Miga Miga Damdinbazar\nMusic by: Ngini Ija by 33nano\nSound effects by: Joshua Kim-Pearson using jsfxr\n\nThis game was created as a final project for CMPM120\nat UCSC during spring quarter 2025", {
             fontSize: '30px',
             color: '#f8f7fa',
             align: 'left'
@@ -62,18 +62,15 @@ class CreditsScene extends Phaser.Scene {
             color: '#ffffff',
             padding: { x: 20, y: 10 },
         }).setOrigin(0.5)
-          .setInteractive({ useHandCursor: true })
-          .on('pointerover', () => startButton.setScale(1.1))
-          .on('pointerout', () => startButton.setScale(1))
-          .on('pointerdown', () => {
-            this.scene.start('mainMenu'); // Replace with your actual game scene key
-        });
+            .setInteractive({ useHandCursor: true })
+            .on('pointerover', () => startButton.setScale(1.1))
+            .on('pointerout', () => startButton.setScale(1))
+            .on('pointerdown', () => {
+                this.scene.start('mainMenu'); // Replace with your actual game scene key
+            });
     }
-    
-    update() {
-        
-        
-    }
-    
-}  
 
+    update() {
+    }
+
+}  

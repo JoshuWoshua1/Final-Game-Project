@@ -3,7 +3,6 @@ class ControlScene extends Phaser.Scene {
     constructor() {
         super("controlScene");
     }
-
     
     create() {
      // Create tilemap game object & set world bounds to the map size
@@ -43,7 +42,7 @@ class ControlScene extends Phaser.Scene {
             centerX,
             centerY,
             screenWidth * 0.9,  // 90% of screen width
-            screenHeight * 0.95, // 80% of screen height
+            screenHeight * 0.95, // 95% of screen height
             0x000000,
             0.8
         ).setOrigin(0.5);
@@ -100,20 +99,15 @@ class ControlScene extends Phaser.Scene {
             color: '#ffffff',
             padding: { x: 20, y: 10 },
         }).setOrigin(0.5)
-          .setInteractive({ useHandCursor: true })
-          .on('pointerover', () => startButton.setScale(1.1))
-          .on('pointerout', () => startButton.setScale(1))
-          .on('pointerdown', () => {
-            this.scene.start('mainMenu'); // Replace with your actual game scene key
-          });
-
-        
-
+            .setInteractive({ useHandCursor: true })
+            .on('pointerover', () => startButton.setScale(1.1))
+            .on('pointerout', () => startButton.setScale(1))
+            .on('pointerdown', () => {
+                this.scene.start('mainMenu');
+            });
     }
-    
-    update() {
-        
-        
+
+    update() {  
     }
     
 }  
