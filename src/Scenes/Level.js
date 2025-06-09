@@ -284,7 +284,6 @@ class Level extends Phaser.Scene {
         my.object.Lock.forEach(o => {
             this.physics.add.existing(o, true);
             o.setData("LockLink", o.getData("LockLink"));
-            console.log(o.getData("LockLink"));
         });
         my.object.Home.forEach(o => this.physics.add.existing(o, true));
 
@@ -1067,7 +1066,6 @@ class Level extends Phaser.Scene {
         }
 
         if (this.playerHP <= 0 && !this.alreadyDead) {
-            console.log("boo")
             this.alreadyDead = true
             this.killSound.play({
                 volume: 0.5
