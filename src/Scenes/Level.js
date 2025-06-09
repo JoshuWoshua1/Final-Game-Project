@@ -41,6 +41,7 @@ class Level extends Phaser.Scene {
 
         this.damage = 1;
         this.playerHP = 5;  // maximum hp of 5
+        this.alreadyDead = false;
 
         this.invincible = false;
         this.invincibleDuration = 1500;
@@ -1066,7 +1067,8 @@ class Level extends Phaser.Scene {
         }
 
         if (this.playerHP <= 0 && !this.alreadyDead) {
-            this.alreadyDead = true;
+            console.log("boo")
+            this.alreadyDead = true
             this.killSound.play({
                 volume: 0.5
             });
@@ -1074,11 +1076,14 @@ class Level extends Phaser.Scene {
                 my.sprite.player.x,
                 my.sprite.player.y,
             );
-            my.sprite.player.visible = false;
+            my.sprite.player.visible = false;;
+        }
+
+        if (this.playerHP <= 0) {
             this.time.delayedCall(250, () => {
                 this.scene.pause();
                 this.music.stop();
-                this.scene.launch('deathScene'/*---------------------- DEATH SCENE NAME ---------------------------------*/)
+                this.scene.launch('deathScene')
             });
         }
     }
