@@ -18,7 +18,7 @@ let config = {
     },
     width: 1440,
     height: 900,
-    scene: [Load, Level, MainMenu, WinScene, DeathScene, ControlScreen]
+    scene: [Load, Level, MainMenu, WinScene, DeathScene, ControlScene, CreditsScene]
 }
 
 var high_score = 0;

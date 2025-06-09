@@ -112,5 +112,20 @@ class MainMenu extends Phaser.Scene {
             padding: { x: 20, y: 10 },
         }).setOrigin(0.5);
 
+        // Start Button
+        const creditsButton = this.add.text(centerX, centerY + 300, 'CREDITS', {
+            fontSize: '32px',
+            backgroundColor: '#333333',
+            color: '#ffffff',
+            padding: { x: 20, y: 10 },
+        }).setOrigin(0.5)
+          .setInteractive({ useHandCursor: true })
+          .on('pointerover', () => creditsButton.setScale(1.1))
+          .on('pointerout', () => creditsButton.setScale(1))
+          .on('pointerdown', () => {
+            this.music.stop();
+            this.scene.start('creditsScene'); // Replace with your actual game scene key
+        });
+
     }
 }

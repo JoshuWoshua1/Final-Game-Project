@@ -1,7 +1,7 @@
-class ControlScreen extends Phaser.Scene {
+class CreditsScene extends Phaser.Scene {
     
     constructor() {
-        super("controlScene");
+        super("creditsScene");
     }
 
     
@@ -43,58 +43,20 @@ class ControlScreen extends Phaser.Scene {
             centerX,
             centerY,
             screenWidth * 0.9,  // 90% of screen width
-            screenHeight * 0.95, // 80% of screen height
+            screenHeight * 0.6, // 80% of screen height
             0x000000,
             0.8
-        ).setOrigin(0.5);
+        ).setOrigin(0.5, 0.8);
 
         bgRect.setDepth(0);
-        this.centerPoint = 400
-        //WASD INFO
-        let akey = this.add.image(this.centerPoint -75, this.centerPoint-100, 'aKey').setScale(5);
-        let dkey = this.add.image(this.centerPoint +75, this.centerPoint-100, 'dKey').setScale(5);
-        let skey = this.add.image(this.centerPoint, this.centerPoint-100, 'sKey').setScale(5);
-        let wkey = this.add.image(this.centerPoint, this.centerPoint-175, 'wKey').setScale(5);
-        
-        this.add.text( this.centerPoint, 125, "PRESS W A S D TO \nAIM YOUR CUTE CAT", {
+        this.add.text( 700, 185, "Kitty Cat\n\nTilemaps by: Kenney\nCustom sprites by: Joshua Kim-Pearson\nCode by: Joshua Kim-Pearson, Brody Vance, & Miga Miga Damdinbazar\nMusic by: Ngini Ija by 33nano\nSound effects by: Joshua Kim-Pearson using jsfxr\n\nThis game was created as a final project for CMPM120\nat UCSC during spring 2025", {
             fontSize: '30px',
             color: '#f8f7fa',
-            align: 'center'
-        }).setOrigin(.5,.5);
-
-        // SPACE BAR INFO
-
-        let space = this.add.image(this.centerPoint, this.centerPoint+200, 'spaceKey').setScale(5);
-
-        this.add.text( this.centerPoint, this.centerPoint+100, "PRESS SPACEBAR TO JUMP", {
-            fontSize: '30px',
-            color: '#f8f7fa',
-            align: 'center'
-        }).setOrigin(.5,.5);
-
-
-        // J AND K INFO
-        let jkey = this.add.image(this.centerPoint+575, this.centerPoint-100, 'jKey').setScale(5);
-        let kkey = this.add.image(this.centerPoint+650, this.centerPoint-100, 'kKey').setScale(5);
-
-        this.add.text( this.centerPoint+600, 125, "PRESS J TO SLASH ATTACK\nAND K TO SHOOT HAIRBALLS", {
-            fontSize: '30px',
-            color: '#f8f7fa',
-            align: 'center'
-        }).setOrigin(.5,.5);
-
-        // SHIFT KEY INFO
-        let shift1 = this.add.image(this.centerPoint+575, this.centerPoint+200, 'shift1').setScale(5);
-        let shift2 = this.add.image(this.centerPoint+655, this.centerPoint+200, 'shift2').setScale(5);
-
-        this.add.text( this.centerPoint+600, this.centerPoint+100, "PRESS SHIFT TO DASH", {
-            fontSize: '30px',
-            color: '#f8f7fa',
-            align: 'center'
+            align: 'left'
         }).setOrigin(.5,.5);
 
         // Start Button
-        const startButton = this.add.text(centerX, centerY+300, 'BACK TO MENU', {
+        const startButton = this.add.text(centerX, centerY, 'BACK TO MENU', {
             fontSize: '32px',
             backgroundColor: '#333333',
             color: '#ffffff',
@@ -105,10 +67,7 @@ class ControlScreen extends Phaser.Scene {
           .on('pointerout', () => startButton.setScale(1))
           .on('pointerdown', () => {
             this.scene.start('mainMenu'); // Replace with your actual game scene key
-          });
-
-        
-
+        });
     }
     
     update() {
