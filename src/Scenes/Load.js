@@ -18,6 +18,7 @@ class Load extends Phaser.Scene {
 
         this.load.tilemapTiledJSON("CatMap", "/tilemaps/CatMap.tmj");  // Tilemap in JSON
         this.load.tilemapTiledJSON("Background", "/tilemaps/Background.tmj");  // Tilemap in JSON
+        this.load.tilemapTiledJSON("mainMenuMap", "/tilemaps/mainMenuMap.tmj");  // Tilemap in JSON
 
         // Load VFX
         this.load.multiatlas("kenny-particles", "vfx/kenny-particles-0.json", "assets/vfx/");
@@ -52,6 +53,20 @@ class Load extends Phaser.Scene {
         this.load.audio("slash", "sounds/swing.wav");
         this.load.audio("spit", "sounds/spit.wav");
         this.load.audio("diamond", "sounds/diamond.wav");
+
+        // load UI 
+        this.load.image("aKey", "UI/akey.png");                    
+        this.load.image("dKey", "UI/dkey.png");                    
+        this.load.image("wKey", "UI/wkey.png");                    
+        this.load.image("sKey", "UI/skey.png");                    
+        this.load.image("jKey", "UI/jkey.png");                    
+        this.load.image("kKey", "UI/kkey.png");                    
+        this.load.image("shift1", "UI/shift1.png");                    
+        this.load.image("shift2", "UI/shift2.png");                    
+        this.load.image("spaceKey", "UI/space.png");                    
+                     
+
+        
     }
 
     create() {
@@ -144,8 +159,7 @@ class Load extends Phaser.Scene {
 
 
         // ends this scene, starts game
-        this.scene.start(/* main menu */);
-        this.scene.start("levelScene");
+        this.scene.start("mainMenu");
     }
 
     update() {

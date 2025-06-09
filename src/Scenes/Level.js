@@ -554,7 +554,8 @@ class Level extends Phaser.Scene {
                 player.body.moves = false;
                 this.time.delayedCall(1000, () => {
                     this.scene.pause();
-                    this.scene.launch(/*---------------------- WIN SCENE NAME ---------------------------------*/)
+                    this.music.stop();
+                    this.scene.launch('winScene')
                 });
             }
         });
@@ -1076,7 +1077,8 @@ class Level extends Phaser.Scene {
             my.sprite.player.visible = false;
             this.time.delayedCall(250, () => {
                 this.scene.pause();
-                this.scene.launch(/*---------------------- DEATH SCENE NAME ---------------------------------*/)
+                this.music.stop();
+                this.scene.launch('deathScene'/*---------------------- DEATH SCENE NAME ---------------------------------*/)
             });
         }
     }
@@ -1130,7 +1132,8 @@ class Level extends Phaser.Scene {
         this.score += num;
         this.scoreText.setText('Score: ' + this.score);
         if (this.score > high_score) {
-            high_score = this.score;
+            window.high_score = this.score;
+
         }
     }
 
@@ -1138,7 +1141,7 @@ class Level extends Phaser.Scene {
         this.diamonds += num;
         this.diamondText.setText('    : ' + this.diamonds + '/3');
         if (this.diamonds > most_diamonds) {
-            most_diamonds = this.diamonds;
+            window.most_diamonds = this.diamonds;
         }
     }
 
