@@ -56,12 +56,12 @@ class Load extends Phaser.Scene {
         this.load.audio("click", "sounds/click_001.ogg")
         
         // load UI elements
-        this.load.image("aKey", "UI/akey.png");                    
-        this.load.image("dKey", "UI/dkey.png");                    
-        this.load.image("wKey", "UI/wkey.png");                    
-        this.load.image("sKey", "UI/skey.png");                    
-        this.load.image("jKey", "UI/jkey.png");                    
-        this.load.image("kKey", "UI/kkey.png");                    
+        this.load.image("aKey", "UI/aKey.png");                    
+        this.load.image("dKey", "UI/dKey.png");                    
+        this.load.image("wKey", "UI/wKey.png");                    
+        this.load.image("sKey", "UI/sKey.png");                    
+        this.load.image("jKey", "UI/jKey.png");                    
+        this.load.image("kKey", "UI/kKey.png");                    
         this.load.image("shift1", "UI/shift1.png");                    
         this.load.image("shift2", "UI/shift2.png");                    
         this.load.image("spaceKey", "UI/space.png");                    
