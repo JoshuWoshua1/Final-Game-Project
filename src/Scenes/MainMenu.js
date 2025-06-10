@@ -5,6 +5,8 @@ class MainMenu extends Phaser.Scene {
 
     create() {
 
+        this.click = this.sound.add("click")
+
         this.music = this.sound.add("song", {
             loop: true,
             volume: 0.3
@@ -73,6 +75,7 @@ class MainMenu extends Phaser.Scene {
             .on('pointerover', () => startButton.setScale(1.1))
             .on('pointerout', () => startButton.setScale(1))
             .on('pointerdown', () => {
+                this.click.play();
                 this.music.stop();
                 this.scene.start('levelScene');
             });
@@ -88,6 +91,7 @@ class MainMenu extends Phaser.Scene {
             .on('pointerover', () => controls.setScale(1.1))
             .on('pointerout', () => controls.setScale(1))
             .on('pointerdown', () => {
+                this.click.play();
                 this.music.stop();
                 this.scene.start('controlScene');
             });
@@ -122,6 +126,7 @@ class MainMenu extends Phaser.Scene {
             .on('pointerover', () => creditsButton.setScale(1.1))
             .on('pointerout', () => creditsButton.setScale(1))
             .on('pointerdown', () => {
+                this.click.play();
                 this.music.stop();
                 this.scene.start('creditsScene');
             });

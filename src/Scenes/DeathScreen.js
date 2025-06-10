@@ -4,6 +4,8 @@ class DeathScene extends Phaser.Scene {
     }
 
     create() {
+        this.click = this.sound.add("click")
+
         const screenWidth = this.sys.game.config.width;
         const screenHeight = this.sys.game.config.height;
 
@@ -71,6 +73,7 @@ class DeathScene extends Phaser.Scene {
             .on('pointerover', () => restartButton.setScale(1.1))
             .on('pointerout', () => restartButton.setScale(1))
             .on('pointerdown', () => {
+                this.click.play();
                 this.scene.stop('levelScene');
                 this.scene.start('levelScene');
             });
@@ -82,6 +85,7 @@ class DeathScene extends Phaser.Scene {
             .on('pointerover', () => menuButton.setScale(1.1))
             .on('pointerout', () => menuButton.setScale(1))
             .on('pointerdown', () => {
+                this.click.play();
                 this.scene.stop('levelScene');
                 this.scene.stop('winScene');
                 this.scene.start('mainMenu');

@@ -6,6 +6,8 @@ class CreditsScene extends Phaser.Scene {
 
     
     create() {
+        this.click = this.sound.add("click")
+
      // Create tilemap game object & set world bounds to the map size
         this.Bbackground = this.add.tilemap("Background", 18, 18, 6, 30);
         this.map = this.add.tilemap("mainMenuMap", 18, 18, 27, 16);
@@ -66,6 +68,7 @@ class CreditsScene extends Phaser.Scene {
             .on('pointerover', () => startButton.setScale(1.1))
             .on('pointerout', () => startButton.setScale(1))
             .on('pointerdown', () => {
+                this.click.play();
                 this.scene.start('mainMenu'); // Replace with your actual game scene key
             });
     }

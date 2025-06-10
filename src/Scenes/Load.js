@@ -53,7 +53,8 @@ class Load extends Phaser.Scene {
         this.load.audio("slash", "sounds/swing.wav");
         this.load.audio("spit", "sounds/spit.wav");
         this.load.audio("diamond", "sounds/diamond.wav");
-
+        this.load.audio("click", "sounds/click_001.ogg")
+        
         // load UI elements
         this.load.image("aKey", "UI/akey.png");                    
         this.load.image("dKey", "UI/dkey.png");                    
